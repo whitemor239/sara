@@ -1,0 +1,21 @@
+<section class="product-gallery" data-product-gallery aria-label="تصاویر محصول" dir="rtl">
+{% if product.gallery_images %}
+  <div class="gallery-stage" tabindex="0" aria-label="گالری تصاویر؛ کلیدهای جهت برای تصویر بعدی و قبلی">
+  {% for image in product.gallery_images %}
+    <button type="button" class="gallery-slide" data-gallery-slide {% if not forloop.first %}hidden{% endif %} aria-label="بزرگ‌نمایی تصویر {{ forloop.counter }}">
+      <img src="{{ image.url }}" alt="{{ image.alt }}" width="960" height="960" {% if not forloop.first %}loading="lazy"{% endif %} decoding="async">
+    </button>
+  {% endfor %}
+  </div>
+  {% if product.gallery_images|length > 1 %}
+  <div class="gallery-controls"><button type="button" data-gallery-prev aria-label="تصویر قبلی">›</button><span data-gallery-count role="status" aria-live="polite"></span><button type="button" data-gallery-next aria-label="تصویر بعدی">‹</button></div>
+  <div class="gallery-thumbnails" aria-label="انتخاب تصویر">
+  {% for image in product.gallery_images %}<button type="button" data-gallery-select="{{ forloop.counter0 }}" aria-label="تصویر {{ forloop.counter }}" {% if forloop.first %}aria-current="true"{% endif %}><img src="{{ image.url }}" alt="" width="80" height="80" loading="lazy"></button>{% endfor %}
+  </div>
+  <div class="gallery-dots" aria-label="انتخاب تصویر">
+  {% for image in product.gallery_images %}<button type="button" data-gallery-select="{{ forloop.counter0 }}" aria-label="تصویر {{ forloop.counter }}" {% if forloop.first %}aria-current="true"{% endif %}><span></span></button>{% endfor %}
+  </div>
+  {% endif %}
+  <dialog class="gallery-lightbox" aria-label="نمای بزرگ تصویر"><button type="button" data-gallery-close aria-label="بستن تصویر">×</button><img alt="" width="1200" height="1200"></dialog>
+{% else %}<div class="gallery-empty">تصویر {{ product.name }} هنوز اضافه نشده است.</div>{% endif %}
+</section>

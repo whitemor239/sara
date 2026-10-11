@@ -1,0 +1,106 @@
+{% load static bakery_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>داشبورد فروش | نارون</title>
+  <link rel="icon" href="{% static 'bakery/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'bakery/dashboard.css' %}">
+  <script src="{% static 'bakery/dashboard.js' %}" defer></script>
+</head>
+<body>
+  <a class="dashboard-skip" href="#dashboard-main">رفتن به محتوای اصلی</a>
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" aria-label="فهرست بخش‌های مدیریت">
+      {% include "bakery/_dashboard_nav.html" %}
+    </aside>
+    <div class="dashboard-workspace">
+      <header class="dashboard-topbar">
+        <button type="button" class="dashboard-menu-toggle" aria-controls="dashboard-mobile-menu" aria-label="باز کردن منو" aria-expanded="false">منو</button>
+        <form class="dashboard-search" role="search" action="{{ request.path }}" method="get">
+          <input type="hidden" name="period" value="{{ period }}"><label for="dashboard-q">جست‌وجو در سفارش‌ها</label>
+          <div class="dashboard-search-row">
+            <input id="dashboard-q" name="q" type="search" value="{{ query }}" placeholder="نام، موبایل یا شمارهٔ سفارش" autocomplete="off">
+            <button type="submit">جست‌وجو</button>
+          </div>
+        </form>
+        <a class="dashboard-avatar" href="{% url 'customer_profile' %}" aria-label="پروفایل مدیر">{{ request.user.username|slice:":1" }}</a>
+      </header>
+      <main id="dashboard-main" class="dashboard-main">
+        <div class="dashboard-heading">
+          <div>
+            <p class="dashboard-date"><time datetime="{{ today|date:'Y-m-d' }}">{{ today|jalali_date:"long" }}</time></p>
+            <h1>نمای کلی فروشگاه</h1>
+            <p>آمار بر اساس سفارش‌های ثبت‌شده در فروشگاه نمایش داده می‌شود.</p>
+          </div>
+          <div class="dashboard-actions">
+            <a href="{% url 'dashboard_export_orders' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="dashboard-action dashboard-action-outline">دریافت فهرست</a>
+            <a href="{% url 'admin:bakery_product_add' %}" class="dashboard-action dashboard-action-primary">محصول جدید <span aria-hidden="true">+</span></a>
+          </div>
+        </div>
+
+        <section class="dashboard-stats" aria-label="آمار فروشگاه">
+          <article class="dashboard-stat dashboard-stat-featured"><h2>فروش امروز</h2><p>{{ sales_today|toman }} <small>تومان</small></p><span>پرداخت‌های تأییدشده</span></article>
+          <article class="dashboard-stat"><h2>سفارش‌های باز</h2><p>{{ open_orders|fa_digits }}</p><span>تا پایان آماده‌سازی و تحویل</span></article>
+          <article class="dashboard-stat"><h2>مشتریان جدید</h2><p>{{ new_customers|fa_digits }}</p><span>ثبت‌نام‌شدهٔ امروز</span></article>
+          <article class="dashboard-stat"><h2>میانگین سبد امروز</h2><p>{{ average_basket|toman }} <small>تومان</small></p><span>میانگین سفارش‌های پرداخت‌شده</span></article>
+        </section>
+
+        <div class="dashboard-insights">
+          <section class="dashboard-chart" aria-labelledby="weekly-chart-title">
+            <div class="dashboard-panel-head">
+              <div><h2 id="weekly-chart-title">{{ period_title }}</h2><p>{{ period_note }}، فقط سفارش‌های پرداخت‌شده</p></div>
+              <span class="dashboard-chart-total">{{ period_sales|toman }} تومان</span>
+            </div>
+            <div class="sales-segments" role="radiogroup" aria-label="بازهٔ فروش">
+              <span class="sales-segment-pill" aria-hidden="true"></span>
+              <a role="radio" aria-checked="{% if period == 'daily' %}true{% else %}false{% endif %}" href="?period=daily&amp;q={{ query|urlencode }}">روزانه</a>
+              <a role="radio" aria-checked="{% if period == 'weekly' %}true{% else %}false{% endif %}" href="?period=weekly&amp;q={{ query|urlencode }}">هفتگی</a>
+              <a role="radio" aria-checked="{% if period == 'monthly' %}true{% else %}false{% endif %}" href="?period=monthly&amp;q={{ query|urlencode }}">۳۰ روز اخیر</a>
+            </div>
+            <div class="chart-type-switch" role="radiogroup" aria-label="نوع نمودار">
+              <button type="button" role="radio" aria-checked="true" data-chart-type="bar">میله‌ای</button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-chart-type="line">خطی</button>
+            </div>
+            <p class="chart-readout" role="status">برای دیدن مبلغ، یک نقطه را انتخاب کنید.</p>
+            <p class="chart-scroll-hint">برای مشاهدهٔ همهٔ نقاط، نمودار را افقی پیمایش کنید؛ جزئیات فروش نیز در دسترس است.</p>
+            {% render_dashboard_chart bars height=200 %}
+            <details class="sales-data"><summary>جزئیات فروش</summary><table><thead><tr><th scope="col">زمان</th><th scope="col">فروش</th></tr></thead><tbody>{% for bar in bars %}<tr><td>{{ bar.label }}</td><td>{{ bar.amount|toman }} تومان</td></tr>{% endfor %}</tbody></table></details>
+          </section>
+          <section class="dashboard-attention" aria-labelledby="dashboard-attention-title">
+            <div class="dashboard-panel-head"><h2 id="dashboard-attention-title">برای پیگیری</h2></div>
+            <a href="{% url 'admin:bakery_order_changelist' %}?status__exact=pending"><strong>{{ pending_orders|fa_digits }}</strong><span>سفارش در انتظار پرداخت</span></a>
+            <a href="{% url 'admin:bakery_order_changelist' %}?status__exact=preparing"><strong>{{ preparing_orders|fa_digits }}</strong><span>سفارش در حال آماده‌سازی</span></a>
+            <a class="dashboard-attention-link" href="{% url 'admin:bakery_order_changelist' %}">مدیریت سفارش‌ها <span aria-hidden="true">←</span></a>
+          </section>
+        </div>
+
+        <section class="dashboard-orders" id="orders" aria-labelledby="dashboard-orders-title">
+          <div class="dashboard-orders-head"><h2 id="dashboard-orders-title">سفارش‌های اخیر</h2><a href="{% url 'admin:bakery_order_changelist' %}">مشاهدهٔ همه <span aria-hidden="true">←</span></a></div>
+          {% if query %}<p class="dashboard-search-summary">نتایج جست‌وجو برای «{{ query }}» <a href="{{ request.path }}">پاک‌کردن جست‌وجو</a></p>{% endif %}
+          {% if has_orders %}
+            <div class="dashboard-table-wrap"><table>
+              <thead><tr><th scope="col">شماره</th><th scope="col">مشتری</th><th scope="col">مبلغ</th><th scope="col">وضعیت</th><th scope="col">زمان ثبت</th></tr></thead>
+              <tbody>{% for order in orders %}
+                <tr>
+                  <td data-label="شماره سفارش"><a class="dashboard-order-link" href="{% url 'admin:bakery_order_change' order.pk %}">#{{ order.number|stringformat:"s"|slice:":8"|fa_digits }}</a></td>
+                  <td data-label="مشتری">{{ order.customer_name }}</td>
+                  <td data-label="مبلغ" class="dashboard-money">{{ order.total|toman }} تومان</td>
+                  <td data-label="وضعیت"><span class="dashboard-status dashboard-status-{{ order.payment_status }}">{{ order.get_status_display }}</span></td>
+                  <td data-label="زمان ثبت" class="dashboard-order-date"><time datetime="{{ order.created_at|date:'c' }}">{{ order.created_at|jalali_date:"numeric" }}</time></td>
+                </tr>
+              {% endfor %}</tbody>
+            </table></div>
+          {% else %}<div class="dashboard-empty">{% if query %}سفارشی با این جست‌وجو پیدا نشد.{% else %}هنوز سفارشی ثبت نشده است.{% endif %}</div>{% endif %}
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog id="dashboard-mobile-menu" class="dashboard-mobile-menu" aria-label="فهرست مدیریت فروشگاه">
+    <button type="button" class="dashboard-menu-close" aria-label="بستن منو">بستن منو ×</button>
+    {% include "bakery/_dashboard_nav.html" %}
+  </dialog>
+</body>
+</html>

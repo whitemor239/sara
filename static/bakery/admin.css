@@ -1,0 +1,117 @@
+@font-face {
+  font-family: Estedad;
+  src: url("Estedad-variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Vazir;
+  src: url("Vazir-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root, html[data-theme="light"] {
+  --primary: #4a2920;
+  --secondary: #8b4f3d;
+  --accent: #f5e8d0;
+  --primary-fg: #fcf9f2;
+  --body-fg: #4a2920;
+  --body-bg: #fbf7ee;
+  --body-quiet-color: #826e63;
+  --body-medium-color: #533e36;
+  --body-loud-color: #4a2920;
+  --header-color: #f5e8d0;
+  --header-branding-color: #f5e8d0;
+  --header-bg: #4a2920;
+  --header-link-color: #f5e8d0;
+  --breadcrumbs-fg: #f5e8d0;
+  --breadcrumbs-link-fg: #fcf9f2;
+  --breadcrumbs-bg: #8b4f3d;
+  --link-fg: #8b4f3d;
+  --link-hover-color: #4a2920;
+  --link-selected-fg: #8b4f3d;
+  --hairline-color: #e8d7be;
+  --border-color: #e8d7be;
+  --darkened-bg: #f5e8d0;
+  --selected-bg: #f5e8d0;
+  --selected-row: #f5e8d0;
+  --button-bg: #8b4f3d;
+  --button-hover-bg: #4a2920;
+  --default-button-bg: #754638;
+  --default-button-hover-bg: #8a5140;
+  --font-family-primary: Vazir, Tahoma, sans-serif;
+}
+
+body { line-height: 1.65; letter-spacing: 0; font-synthesis: none; }
+#header { min-height: 4rem; align-items: center; }
+#site-name { font-family: Estedad, Vazir, sans-serif; font-size: 1.25rem; font-weight: 800; line-height: 1.5; }
+#site-name a, #site-name a:visited { color: var(--header-branding-color); }
+.admin-brand-subtitle { display: inline-block; margin-inline-start: .6rem; font-family: Vazir, sans-serif; font-size: .72rem; font-weight: 400; opacity: .85; }
+#user-tools { font-size: .82rem; }
+.breadcrumbs { padding-block: .75rem; }
+#nav-sidebar { border-inline-end: 1px solid var(--hairline-color); background: var(--body-bg); }
+#content { max-width: 90rem; margin-inline: auto; }
+#content h1 { font-family: Estedad, Vazir, sans-serif; font-size: 1.5rem; font-weight: 800; }
+.module, .inline-group { border-radius: .5rem; overflow: hidden; border: 1px solid var(--border-color); }
+.module h2, .module caption, .inline-group h2 { background: var(--secondary); font-family: Estedad, Vazir, sans-serif; font-weight: 700; }
+#changelist-filter { background: var(--body-bg); }
+#changelist-filter h2 { background: var(--secondary); font-family: Estedad, Vazir, sans-serif; font-weight: 700; }
+:is(input, select, textarea) { font-family: Vazir, Tahoma, sans-serif; }
+:is(input, select, textarea, button, a):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+input[type="submit"], .button, .submit-row input, .object-tools a { border-radius: 6px; }
+
+@media (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #754638;
+    --secondary: #8b4f3d;
+    --body-fg: #f5e8d0;
+    --body-bg: #2b211d;
+    --body-quiet-color: #dfcbb3;
+    --body-medium-color: #e8d7be;
+    --body-loud-color: #f5e8d0;
+    --header-bg: #382b25;
+    --breadcrumbs-bg: #4a2920;
+    --link-fg: #c9a66b;
+    --link-hover-color: #dfc28e;
+    --link-selected-fg: #c9a66b;
+    --hairline-color: #826659;
+    --border-color: #826659;
+    --darkened-bg: #382b25;
+    --selected-bg: #36241e;
+    --selected-row: #36241e;
+    --button-bg: #8b4f3d;
+    --button-hover-bg: #6f3b2d;
+    --default-button-bg: #754638;
+    --default-button-hover-bg: #8a5140;
+  }
+}
+
+html[data-theme="dark"] {
+  --primary: #754638;
+  --secondary: #8b4f3d;
+  --body-fg: #f5e8d0;
+  --body-bg: #2b211d;
+  --body-quiet-color: #dfcbb3;
+  --body-medium-color: #e8d7be;
+  --body-loud-color: #f5e8d0;
+  --header-bg: #382b25;
+  --breadcrumbs-bg: #4a2920;
+  --link-fg: #c9a66b;
+  --link-hover-color: #dfc28e;
+  --link-selected-fg: #c9a66b;
+  --hairline-color: #826659;
+  --border-color: #826659;
+  --darkened-bg: #382b25;
+  --selected-bg: #36241e;
+  --selected-row: #36241e;
+  --button-bg: #8b4f3d;
+  --button-hover-bg: #6f3b2d;
+  --default-button-bg: #754638;
+  --default-button-hover-bg: #8a5140;
+}

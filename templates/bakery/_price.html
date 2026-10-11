@@ -1,0 +1,14 @@
+{% load bakery_tags %}
+{# Price Component: amount, original (optional), unit="تومان", size="sm"|"md"|"lg" #}
+<div class="price-container price-{{ size|default:'md' }}">
+  <span class="price-primary">
+    <strong class="price-amount">{{ amount|toman }}</strong>
+    <span class="price-unit">{{ unit|default:"تومان" }}</span>
+  </span>
+  {% if off > 0 and original %}
+    <span class="price-discount-row">
+      <span class="price-badge">{{ off|fa_digits }}٪ تخفیف</span>
+      <span class="price-original">{{ original|toman }}</span>
+    </span>
+  {% endif %}
+</div>

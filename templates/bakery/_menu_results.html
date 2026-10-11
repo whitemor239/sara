@@ -1,0 +1,13 @@
+<div id="menu-results" aria-live="polite" aria-busy="false">
+  {% if products %}
+    <div class="product-grid" id="product-grid">
+      {% for product in products %}
+        {% include "bakery/_product.html" %}
+      {% endfor %}
+    </div>
+  {% elif categories or dietary_tags %}
+    <div class="empty-menu"><p>با این انتخاب چیزی در منوی امروز پیدا نشد.</p><a class="text-link arrow-link" href="{% url 'menu' %}">دیدن همهٔ شیرینی‌ها <span aria-hidden="true">←</span></a></div>
+  {% else %}
+    <div class="empty-menu"><p>منوی امروز هنوز آماده نشده.</p><span>کمی بعد دوباره سر بزنید.</span></div>
+  {% endif %}
+</div>

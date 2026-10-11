@@ -1,0 +1,32 @@
+{# Order Result Animation: status = "paid" | "failed" | "initiated" #}
+<div class="status-animation-wrap" role="status">
+  {% if status == "paid" %}
+    <div class="status-check status-check-success">
+      <svg width="76" height="76" viewBox="0 0 72 72" class="status-svg pop-anim" aria-hidden="true">
+        <circle cx="36" cy="36" r="34" class="status-circle-bg" />
+        <circle cx="36" cy="36" r="34" class="status-circle-stroke" stroke-width="2" />
+        <path d="M22 37 L32 47 L51 27" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" class="status-check-draw draw-anim" />
+      </svg>
+      {% if label %}<p class="status-label word-in-anim">{{ label }}</p>{% endif %}
+    </div>
+  {% elif status == "failed" %}
+    <div class="status-check status-check-failed">
+      <svg width="76" height="76" viewBox="0 0 72 72" class="status-svg pop-anim" aria-hidden="true">
+        <circle cx="36" cy="36" r="34" class="status-circle-bg" />
+        <circle cx="36" cy="36" r="34" class="status-circle-stroke" stroke-width="2" />
+        <path d="M25 25 L47 47 M47 25 L25 47" fill="none" stroke-width="4" stroke-linecap="round" class="status-check-draw draw-anim" />
+      </svg>
+      {% if label %}<p class="status-label word-in-anim">{{ label }}</p>{% endif %}
+    </div>
+  {% else %}
+    <div class="status-check status-check-pending">
+      <svg width="76" height="76" viewBox="0 0 72 72" class="status-svg pop-anim" aria-hidden="true">
+        <circle cx="36" cy="36" r="34" class="status-circle-bg" />
+        <circle cx="36" cy="36" r="34" class="status-circle-stroke" stroke-width="2" />
+        <circle cx="36" cy="36" r="3" fill="currentColor" />
+        <path d="M36 20 L36 36 L46 42" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="status-check-draw draw-anim" />
+      </svg>
+      {% if label %}<p class="status-label word-in-anim">{{ label }}</p>{% endif %}
+    </div>
+  {% endif %}
+</div>

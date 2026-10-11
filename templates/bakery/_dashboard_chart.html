@@ -1,0 +1,45 @@
+{% load bakery_tags %}
+{# RTL SVG Bar Chart Component #}
+<div class="chart-container" dir="rtl">
+  <svg class="chart-fixed-axis" viewBox="0 0 110 {{ H }}" width="110" height="{{ H }}" aria-label="محور مبلغ فروش">
+    {% for tick in ticks %}<text direction="ltr" x="102" y="{{ tick.y|add:'4' }}" class="chart-tick-text" text-anchor="end">{{ tick.val|compact_fa }}</text>{% endfor %}
+  </svg>
+  <div class="chart-plot-scroll">
+  <svg viewBox="0 0 {{ axis_x }} {{ H }}" height="{{ H }}" preserveAspectRatio="none" class="rtl-bar-chart" role="group" aria-label="نمودار فروش در بازهٔ انتخاب‌شده">
+    <!-- Grid & Y-Ticks on the right -->
+    {% for tick in ticks %}
+      <g class="chart-tick-group">
+        <line x1="{{ padL }}" x2="{{ axis_x }}" y1="{{ tick.y }}" y2="{{ tick.y }}" class="chart-grid-line" />
+
+      </g>
+    {% endfor %}
+
+    <g class="chart-line-layer" aria-hidden="true">
+      <path d="{{ area_path }}" class="chart-line-area" />
+      <path d="{{ line_path }}" class="chart-line-path" />
+    </g>
+    <!-- Bars (RTL order: Saturday on right, Friday on left) -->
+    {% for bar in bars %}
+      <g class="chart-bar-group{% if bar.is_today %} is-today{% endif %}{% if bar.is_peak %} is-peak{% endif %}"
+         tabindex="0"
+         role="button" aria-label="{{ bar.full_label }}: {{ bar.amount|toman }} تومان"
+         data-amount="{{ bar.amount|toman }} تومان"
+         data-day="{{ bar.full_label }}">
+        <!-- Transparent hover target -->
+        <rect x="{{ bar.x_slot }}" y="{{ padT }}" width="{{ bar.slot }}" height="{{ plotH }}" class="chart-hover-slot" />
+        
+        <!-- Bar rect -->
+        <rect x="{{ bar.bx }}" y="{{ bar.by }}" width="{{ bar.bw }}" height="{{ bar.bh }}" rx="5" class="chart-bar-rect" />
+
+        <circle cx="{{ bar.cx }}" cy="{{ bar.by }}" r="3" class="chart-line-dot" />
+        <!-- X-Axis Day Label -->
+        <text x="{{ bar.cx }}" y="{{ H|add:'-8' }}" class="chart-day-label" text-anchor="middle">
+          {{ bar.label }}
+        </text>
+
+
+      </g>
+    {% endfor %}
+  </svg>
+  </div>
+</div>

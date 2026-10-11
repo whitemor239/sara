@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load bakery_tags %}
+{% block title %}{{ product.name }} | نارون{% endblock %}
+{% block content %}
+<section class="detail-layout section-shell">
+  {% include "bakery/_product_gallery.html" %}
+
+  <div class="detail-copy">
+    <a class="back-link" href="{% url 'menu' %}">← بازگشت به منو</a>
+    
+    <div class="detail-header">
+      <p class="eyebrow">پختِ امروز</p>
+      <h1>{{ product.name }}</h1>
+    </div>
+
+    {% if product.category or product.dietary_tags.all %}
+      <div class="product-labels detail-labels">
+        {% if product.category %}
+          <span class="category-label">{{ product.category.name }}</span>
+        {% endif %}
+        {% for tag in product.dietary_tags.all %}
+          <span class="diet-label">{{ tag.name }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="detail-content">
+      <p class="detail-description">{{ product.description|default:product.short_description }}</p>
+      {% if product.ingredients %}
+        <p class="ingredients"><strong>ترکیبات:</strong> {{ product.ingredients }}</p>
+      {% endif %}
+    </div>
+
+    <div class="detail-purchase">
+      <div class="detail-price-wrap">
+        {% render_price amount=product.price original=product.original_price size="lg" %}
+      </div>
+      <form method="post" action="{% url 'add_to_basket' product.id %}" class="detail-form" data-cart-add>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="button-primary detail-add-btn" type="submit">افزودن به سبد خرید</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Customer Reviews Section -->
+<section class="section-shell reviews-section" id="reviews" aria-labelledby="reviews-heading">
+  <div class="reviews-layout">
+    <!-- Left: Existing Reviews -->
+    <div class="reviews-feed">
+      <div class="reviews-head">
+        <h2 id="reviews-heading">تجربه و نظرات مشتریان</h2>
+        <span class="reviews-count">{{ reviews.count|default:0 }} نظر ثبت‌شده</span>
+      </div>
+
+      {% if reviews %}
+        <div class="reviews-list">
+          {% for r in reviews %}
+            <article class="review-item">
+              <div class="review-item-header">
+                <div class="review-author-info">
+                  <span class="review-avatar">{{ r.author_name|slice:":1" }}</span>
+                  <div>
+                    <h4 class="review-author-name">{{ r.author_name }}</h4>
+                    <time class="review-date">{{ r.created_at|jalali_date:"long" }}</time>
+                  </div>
+                </div>
+                <div class="rating-stars" aria-label="امتیاز {{ r.rating }} از ۵">
+                  {% for _ in "12345" %}
+                    {% if forloop.counter <= r.rating %}
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" class="star-icon">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    {% else %}
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" class="star-icon star-empty">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              <p class="review-body">«{{ r.comment }}»</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-reviews">
+          <p>هنوز نظری برای این شیرینی ثبت نشده است.</p>
+          <span>اولین نفری باشید که تجربهٔ طعم آن را می‌نویسد!</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Add Review Form -->
+    <div class="review-form-card">
+      <h3>ثبت نظر دربارهٔ {{ product.name }}</h3>
+      <p class="review-form-desc">تجربهٔ خود را در مورد طعم، بافت و کیفیت با بقیه به اشتراک بگذارید.</p>
+
+      <form method="post" action="{% url 'product_detail' product.slug %}" class="review-form">
+        {% csrf_token %}
+        <div class="form-row">
+          <label for="{{ review_form.author_name.id_for_label }}">{{ review_form.author_name.label }}</label>
+          {{ review_form.author_name }}
+          {% if review_form.author_name.errors %}<small class="field-error">{{ review_form.author_name.errors.0 }}</small>{% endif %}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ review_form.rating.id_for_label }}">{{ review_form.rating.label }}</label>
+          {{ review_form.rating }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ review_form.comment.id_for_label }}">{{ review_form.comment.label }}</label>
+          {{ review_form.comment }}
+          {% if review_form.comment.errors %}<small class="field-error">{{ review_form.comment.errors.0 }}</small>{% endif %}
+        </div>
+
+        <button type="submit" name="submit_review" value="1" class="button-primary review-submit-btn">ثبت دیدگاه شما</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

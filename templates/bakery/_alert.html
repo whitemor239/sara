@@ -1,0 +1,19 @@
+{# Reusable Alert Component: variant = "info" | "success" | "warning" | "destructive" #}
+<div role="{% if variant == 'destructive' %}alert{% else %}status{% endif %}"
+     class="alert alert-{{ variant|default:'info' }}{% if extra_class %} {{ extra_class }}{% endif %}">
+  <span class="alert-icon" aria-hidden="true">
+    {% if variant == "success" %}
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+    {% elif variant == "warning" %}
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    {% elif variant == "destructive" or variant == "error" %}
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    {% else %}
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    {% endif %}
+  </span>
+  <div class="alert-content">
+    {% if title %}<h4 class="alert-title">{{ title }}</h4>{% endif %}
+    {% if message %}<div class="alert-body">{{ message }}</div>{% endif %}
+  </div>
+</div>

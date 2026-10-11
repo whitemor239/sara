@@ -1,0 +1,102 @@
+{# TestimonialsBlock Component (Converted from React TestimonialsBlock) #}
+<section class="testimonials-section section-shell" aria-labelledby="testimonials-heading">
+  <div class="testimonials-header text-center" data-reveal>
+    <p class="eyebrow">{{ eyebrow|default:"تجربهٔ همراهان ما" }}</p>
+    <h2 id="testimonials-heading">{{ title|default:"حرف مشتری‌ها" }}</h2>
+  </div>
+
+  <div class="testimonials-grid" data-reveal>
+    {% if featured_reviews %}
+      {% for review in featured_reviews %}
+        <figure class="testimonial-card">
+          <div class="rating-stars" aria-label="امتیاز {{ review.rating }} از ۵">
+            {% for _ in "12345" %}
+              {% if forloop.counter <= review.rating %}
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" class="star-icon">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" class="star-icon star-empty">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <blockquote class="testimonial-quote">
+            «{{ review.comment }}»
+          </blockquote>
+          <figcaption class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">{{ review.author_name|slice:":1" }}</div>
+            <div class="testimonial-meta">
+              <p class="testimonial-name">{{ review.author_name }}</p>
+              <p class="testimonial-role">{{ review.product.name }}</p>
+            </div>
+          </figcaption>
+        </figure>
+      {% endfor %}
+    {% else %}
+      <!-- Item 1 -->
+    <figure class="testimonial-card">
+      <div class="rating-stars" aria-label="امتیاز ۵ از ۵">
+        {% for _ in "12345" %}
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" class="star-icon">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        {% endfor %}
+      </div>
+      <blockquote class="testimonial-quote">
+        «تارت شکلاتی رو برای تولد دخترم سفارش دادم، بافت و عطر کره فوق‌العاده بود و شیرینی‌اش اصلاً دل رو نمی‌زد. بسته‌بندی هم خیلی با وسواس انجام شده بود.»
+      </blockquote>
+      <figcaption class="testimonial-author">
+        <div class="testimonial-avatar" aria-hidden="true">ن‌م</div>
+        <div class="testimonial-meta">
+          <p class="testimonial-name">نگار مرادی</p>
+          <p class="testimonial-role">مشتری همیشگی</p>
+        </div>
+      </figcaption>
+    </figure>
+
+    <!-- Item 2 -->
+    <figure class="testimonial-card">
+      <div class="rating-stars" aria-label="امتیاز ۵ از ۵">
+        {% for _ in "12345" %}
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" class="star-icon">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        {% endfor %}
+      </div>
+      <blockquote class="testimonial-quote">
+        «چیزکیک نیویورکی تازه و با پنیر باکیفیت آماده شده بود. ارسال دقیقاً سر وقتی که هماهنگ شده بود رسید دستمون. واقعاً دست‌مریزاد.»
+      </blockquote>
+      <figcaption class="testimonial-author">
+        <div class="testimonial-avatar" aria-hidden="true">س‌ر</div>
+        <div class="testimonial-meta">
+          <p class="testimonial-name">سامان رضایی</p>
+          <p class="testimonial-role">سفارش برای شرکت</p>
+        </div>
+      </figcaption>
+    </figure>
+
+    <!-- Item 3 -->
+    <figure class="testimonial-card">
+      <div class="rating-stars" aria-label="امتیاز ۵ از ۵">
+        {% for _ in "12345" %}
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" class="star-icon">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        {% endfor %}
+      </div>
+      <blockquote class="testimonial-quote">
+        «نان‌های بدون گلوتن و کم‌شیرین عالی بودن. پیدا کردن شیرینی سالم و خوش‌طعم تو تهران سخته ولی اینجا به ترکیب مواد کاملاً احترام می‌ذارن.»
+      </blockquote>
+      <figcaption class="testimonial-author">
+        <div class="testimonial-avatar" aria-hidden="true">پ‌ط</div>
+        <div class="testimonial-meta">
+          <p class="testimonial-name">پریسا طباطبایی</p>
+          <p class="testimonial-role">مشتری رژیمی</p>
+        </div>
+      </figcaption>
+    </figure>
+    {% endif %}
+  </div>
+</section>

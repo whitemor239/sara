@@ -1,0 +1,40 @@
+{% load bakery_tags %}
+{# Step indicator: step 1 = basket, step 2 = checkout, step 3 = payment/status #}
+<nav dir="rtl" aria-label="مراحل خرید" class="stepper-nav">
+  <ol class="stepper-list">
+    <li class="stepper-item {% if current_step > 1 %}is-completed{% elif current_step == 1 %}is-current{% else %}is-upcoming{% endif %}">
+      <div class="stepper-node">
+        {% if current_step > 1 %}
+          <a href="{% url 'basket' %}" class="stepper-circle" aria-label="مرحله ۱: سبد خرید (تکمیل‌شده)">
+            <svg class="stepper-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 10 8 14 16 6"/></svg>
+          </a>
+        {% else %}
+          <span class="stepper-circle" {% if current_step == 1 %}aria-current="step"{% endif %}>{{ 1|fa_digits }}</span>
+        {% endif %}
+        <span class="stepper-title">سبد خرید</span>
+      </div>
+      <div class="stepper-line" aria-hidden="true"></div>
+    </li>
+
+    <li class="stepper-item {% if current_step > 2 %}is-completed{% elif current_step == 2 %}is-current{% else %}is-upcoming{% endif %}">
+      <div class="stepper-node">
+        {% if current_step > 2 %}
+          <span class="stepper-circle" aria-label="مرحله ۲: اطلاعات ارسال (تکمیل‌شده)">
+            <svg class="stepper-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 10 8 14 16 6"/></svg>
+          </span>
+        {% else %}
+          <span class="stepper-circle" {% if current_step == 2 %}aria-current="step"{% endif %}>{{ 2|fa_digits }}</span>
+        {% endif %}
+        <span class="stepper-title">اطلاعات ارسال</span>
+      </div>
+      <div class="stepper-line" aria-hidden="true"></div>
+    </li>
+
+    <li class="stepper-item {% if current_step >= 3 %}is-current{% else %}is-upcoming{% endif %} is-last">
+      <div class="stepper-node">
+        <span class="stepper-circle" {% if current_step >= 3 %}aria-current="step"{% endif %}>{{ 3|fa_digits }}</span>
+        <span class="stepper-title">پرداخت و پیگیری</span>
+      </div>
+    </li>
+  </ol>
+</nav>

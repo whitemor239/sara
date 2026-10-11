@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static bakery_tags %}
+{% block title %}نارون | پختِ آرام، هر روز{% endblock %}
+{% block content %}
+<div class="home-page">
+<section class="bakery-cover" aria-labelledby="home-hero-title">
+  {% if products.0.image %}
+  <img class="bakery-cover-image" src="{{ products.0.image.url }}" srcset="{% catalog_srcset products.0.image %}" sizes="100vw" width="1200" height="800" fetchpriority="high" alt="{{ products.0.image_alt|default:products.0.name }}">
+  {% else %}
+  <img class="bakery-cover-image" src="{% static 'bakery/tart-sample.webp' %}" width="1600" height="1000" fetchpriority="high" alt="تصویر نمونهٔ تارت شکلاتی">
+  {% endif %}
+  <div class="bakery-cover-copy">
+    <p class="eyebrow">شیرینی‌پزی خانگی، با حوصله</p>
+    <h1 id="home-hero-title">عطرِ شیرینی،<br>حالِ خانه.</h1>
+    <p>نان و شیرینی‌های دست‌ساز، برای لحظه‌های آرام شما.</p>
+    <a class="button-primary" href="{% url 'menu' %}">دیدن منو و سفارش <span aria-hidden="true">←</span></a>
+  </div>
+</section>
+
+<p class="cover-guidance section-shell">برای روش تحویل و زمان آماده‌سازی، <a href="{% url 'contact' %}">با ما هماهنگ کنید</a>.</p>
+<section class="today section-shell" id="menu">
+  <div class="section-heading" data-reveal><h2>از تنورِ ما</h2><a class="text-link arrow-link" href="{% url 'menu' %}">منوی کامل <span aria-hidden="true">←</span></a></div>
+  {% if products %}<div class="product-grid">{% for product in products %}{% include "bakery/_product.html" %}{% endfor %}</div>
+  {% else %}<div class="empty-menu"><p>منوی امروز هنوز اینجا چیده نشده.</p><span>به‌زودی شیرینی‌های تازه را می‌بینید.</span></div>{% endif %}
+</section>
+
+{% include "bakery/_testimonials.html" %}
+
+<section class="story section-shell" id="story">
+  <div class="story-copy" data-reveal><h2>پختن برای<br><em>آدم‌های خودمان.</em></h2><p>ما به مزه‌های آشنا و پختِ باحوصله دل‌بسته‌ایم. اینجا دربارهٔ ترکیبات هر شیرینی روشن می‌نویسیم و منو را با چیزهایی نگه می‌داریم که واقعاً برای سفارش آماده‌اند.</p><a class="text-link arrow-link" href="{% url 'about' %}">دربارهٔ ما <span aria-hidden="true">←</span></a></div>
+</section>
+</div>
+{% endblock %}

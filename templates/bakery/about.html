@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}دربارهٔ ما | نارون{% endblock %}
+{% block content %}
+<section class="page-intro about-intro" data-reveal>
+  <h1>ما به عطرِ<br><em>خانه باور داریم.</em></h1>
+  <p>نارون جایی‌ست برای شیرینی‌ها و نان‌هایی که ساده، تازه و بی‌تکلف‌اند؛ همان چیزهایی که دورهمی را کمی گرم‌تر می‌کنند.</p>
+</section>
+<section class="about-approach section-shell">
+  <div class="about-copy" data-reveal>
+    <h2>خوب پختن،<br><em>نه شلوغ کردن.</em></h2>
+    <p>برای ما، شیرینی خوب به مواد پیچیده و ظاهر پرزرق‌وبرق احتیاج ندارد. خمیرِ درست، زمان کافی و دست‌هایی که با دقت کار می‌کنند، شروعِ یک مزهٔ به‌یادماندنی‌اند.</p>
+  </div>
+</section>
+<section class="about-practice section-shell" data-reveal>
+  <h2>انتخاب را برایتان روشن می‌کنیم.</h2>
+  <p>اطلاعات ترکیبات و ویژگی‌های غذاییِ تأییدشده را کنار هر محصول می‌آوریم. اگر دربارهٔ یک ماده یا حساسیت غذایی پرسشی دارید، از صفحهٔ تماس برایمان بنویسید.</p>
+  <a class="text-link arrow-link" href="{% url 'contact' %}">تماس با ما <span aria-hidden="true">←</span></a>
+</section>
+{% endblock %}

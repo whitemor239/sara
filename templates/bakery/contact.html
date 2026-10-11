@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}تماس با ما | نارون{% endblock %}
+{% block content %}
+<section class="page-intro contact-intro" data-reveal>
+  <p class="eyebrow">حرفی از دلِ آشپزخانه</p>
+  <h1>برایمان <em>بنویسید.</em></h1>
+  <p>دربارهٔ سفارش، شیرینی‌ها یا هر چیزی که دوست دارید بپرسید. پیامتان مستقیم به آشپزخانه می‌رسد.</p>
+</section>
+<section class="contact-layout section-shell">
+  <aside class="contact-aside" data-reveal>
+    <h2>گوش می‌دهیم،<br><em>با حوصله.</em></h2>
+    <p>برای پیگیری سفارش، نامی که با آن سفارش داده‌اید و شمارهٔ همراهتان را بنویسید. پاسخ را از همان راه با شما هماهنگ می‌کنیم.</p>
+    <div class="contact-aside-note"><p>اگر دربارهٔ ترکیبات یا حساسیت غذایی می‌پرسید، لطفاً نام شیرینی را هم در پیام بیاورید.</p></div>
+  </aside>
+  <div class="contact-form-wrap" data-reveal>
+    {% if sent %}
+      <div class="contact-success" role="status" aria-live="polite">
+        <svg class="success-check" viewBox="0 0 56 56" aria-hidden="true"><circle class="success-circle" cx="28" cy="28" r="23"/><path class="success-tick" d="m17 28 7 7 15-16"/></svg>
+        <h2>پیامتان رسید.</h2>
+        <p>ممنون که برایمان نوشتید. پیام در دفتر آشپزخانه ثبت شد.</p>
+        <a class="text-link arrow-link" href="{% url 'home' %}">بازگشت به خانه <span aria-hidden="true">←</span></a>
+      </div>
+    {% else %}
+      <form class="contact-form" method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-field{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="button-primary" type="submit">فرستادن پیام <span aria-hidden="true">←</span></button>
+        <small class="contact-privacy">شمارهٔ همراهتان فقط برای پاسخ‌دادن به همین پیام استفاده می‌شود.</small>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

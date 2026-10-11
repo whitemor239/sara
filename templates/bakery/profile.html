@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load bakery_tags %}
+{% block title %}پروفایل من و سوابق سفارش | نارون{% endblock %}
+{% block content %}
+<section class="section-shell profile-container">
+  <div class="profile-header-card">
+    <div class="profile-avatar">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div class="profile-meta">
+      <h1>{% if profile and profile.display_name %}{{ profile.display_name }}{% else %}مشتری گرامی{% endif %}</h1>
+      {% if profile %}
+        <p class="profile-phone"><span class="profile-badge-active">حساب تأییدشده</span> <bdi dir="ltr">{{ profile.phone|fa_digits }}</bdi></p>
+      {% elif staff_account %}
+        <p class="profile-phone"><span class="profile-badge-active">حساب مدیریت فروشگاه</span> {{ request.user.username }}</p>
+      {% endif %}
+    </div>
+    <form method="post" action="{% url 'phone_logout' %}" class="profile-logout-btn">
+      {% csrf_token %}
+      <button class="plain-button logout-action" type="submit">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>خروج از حساب</span>
+      </button>
+    </form>
+  </div>
+
+  {% if profile %}
+    <nav class="profile-section-nav" aria-label="بخش‌های حساب">
+      <a href="#profile-orders">سفارش‌ها</a><a href="#profile-info">اطلاعات فردی</a>
+    </nav>
+    <div class="profile-grid">
+      <!-- Right/Main: Order History & Status -->
+      <div class="profile-main-column" id="profile-orders">
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div>
+              <h2>تاریخچه و وضعیت سفارش‌ها</h2>
+              <p>وضعیت و پیگیری سفارش‌ها</p>
+            </div>
+            <span class="profile-order-count">{{ order_count|fa_digits }} سفارش</span>
+          </div>
+
+          {% if orders %}
+            <div class="order-cards-list">
+              {% for order in orders %}
+                <article class="order-card">
+                  <div class="order-card-top">
+                    <div class="order-card-ref">
+                      <span class="order-num-label">شماره سفارش:</span>
+                      <bdi dir="ltr" class="order-num">{{ order.number }}</bdi>
+                    </div>
+                    <div class="order-status-badges">
+                      {% if order.status == "completed" %}
+                        <span class="badge-status badge-completed">{{ order.get_status_display }}</span>
+                      {% elif order.status == "ready" %}
+                        <span class="badge-status badge-ready">{{ order.get_status_display }}</span>
+                      {% elif order.status == "preparing" %}
+                        <span class="badge-status badge-preparing">{{ order.get_status_display }}</span>
+                      {% elif order.status == "paid" %}
+                        <span class="badge-status badge-paid">{{ order.get_status_display }}</span>
+                      {% elif order.status == "cancelled" %}
+                        <span class="badge-status badge-cancelled">{{ order.get_status_display }}</span>
+                      {% else %}
+                        <span class="badge-status badge-pending">{{ order.get_status_display }}</span>
+                      {% endif %}
+
+                      {% if order.payment_status == "paid" %}
+                        <span class="badge-payment badge-payment-paid">پرداخت موفق</span>
+                      {% elif order.payment_status == "failed" %}
+                        <span class="badge-payment badge-payment-failed">ناموفق</span>
+                      {% else %}
+                        <span class="badge-payment badge-payment-unpaid">پرداخت‌نشده</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="order-card-details">
+                    <div class="order-detail-item">
+                      <span>زمان ثبت:</span>
+                      <time datetime="{{ order.created_at|date:'c' }}">{{ order.created_at|jalali_date:"full" }}</time>
+                    </div>
+                    <div class="order-detail-item">
+                      <span>روش تحویل:</span>
+                      <span>{{ order.get_fulfillment_display }}</span>
+                    </div>
+                    {% if order.ref_id %}
+                      <div class="order-detail-item">
+                        <span>کد پیگیری پرداخت:</span>
+                        <bdi dir="ltr">{{ order.ref_id|fa_digits }}</bdi>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="order-card-footer">
+                    <div class="order-card-price">
+                      <span>جمع مبلغ:</span>
+                      <strong>{{ order.total|toman }} تومان</strong>
+                    </div>
+                    <div class="order-card-actions">
+                      {% if order.payment_status != "paid" and order.status != "cancelled" %}
+                        <form method="post" action="{% url 'retry_payment' order.number %}" class="inline-form">
+                          {% csrf_token %}
+                          <button class="button-primary btn-sm" type="submit">پرداخت سفارش</button>
+                        </form>
+                      {% endif %}
+                      <a class="plain-button btn-sm" href="{% url 'order_status' order.number %}">
+                        <span>جزئیات کامل</span>
+                        <span aria-hidden="true">←</span>
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+            {% render_pagination orders "profile-orders" %}
+          {% else %}
+            <div class="profile-empty-orders">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                <path d="M3 6h18"></path>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+              <p>هنوز سفارشی با این شماره ثبت نشده است.</p>
+              <a class="button-primary btn-sm" href="{% url 'menu' %}">دیدن منو و اولین خرید</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Left: Edit profile info -->
+      <aside class="profile-side-column" id="profile-info">
+        <div class="profile-card">
+          <h2>اطلاعات فردی</h2>
+          <form class="account-form" method="post" data-profile-save>
+            {% csrf_token %}
+            <div class="form-field{% if form.display_name.errors %} has-error{% endif %}">
+              <label for="{{ form.display_name.id_for_label }}">{{ form.display_name.label }}</label>
+              {{ form.display_name }}
+              <span id="profile-name-hint" class="profile-save-hint">نامی که برای سفارش استفاده می‌کنید.</span>
+              {% for error in form.display_name.errors %}<small class="field-error" id="profile-name-error" role="alert">{{ error }}</small>{% endfor %}
+            </div>
+            <p class="profile-dirty-hint" role="status" hidden>تغییرات هنوز ذخیره نشده‌اند.</p>
+            <button class="button-primary btn-block" type="submit">ذخیره تغییرات</button>
+          </form>
+        </div>
+
+        <div class="profile-card profile-help-card">
+          <h3>نیاز به راهنمایی دارید؟</h3>
+          <p>اگر در روند سفارش یا پرداخت به مشکلی برخوردید، مستقیماً به آشپزخانه پیام دهید.</p>
+          <a class="text-link arrow-link" href="{% url 'contact' %}">ارسال پیام به پشتیبانی <span aria-hidden="true">←</span></a>
+        </div>
+      </aside>
+    </div>
+  {% else %}
+    <div class="profile-staff-box">
+      {% if staff_account %}
+        <h2>داشبورد مدیریتی فروشگاه</h2>
+        <p>شما دسترسی ادمین دارید و می‌توانید محصولات و سفارش‌ها را مدیریت کنید.</p>
+        <div class="staff-actions">
+          <a class="button-primary" href="{% url 'shop_dashboard' %}">ورود به داشبورد فروش</a>
+          <a class="plain-button" href="{% url 'admin:bakery_product_changelist' %}">پنل مدیریت Django</a>
+        </div>
+      {% else %}
+        <h2>شمارهٔ همراه را تأیید کنید</h2>
+        <p>برای ساخت پروفایل مشتری، از حساب فعلی خارج شوید و با کد پیامکی وارد شوید.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

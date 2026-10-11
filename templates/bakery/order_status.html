@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load bakery_tags %}
+{% block title %}وضعیت پرداخت و سفارش | نارون{% endblock %}
+{% block content %}
+<div class="stepper-shell">
+  {% include "bakery/_stepper.html" with current_step=3 %}
+</div>
+
+<section class="order-result-shell section-shell">
+  <div class="order-result-card">
+    {% if order.payment_status == "paid" %}
+      {% include "bakery/_status_animation.html" with status="paid" label="پرداخت با موفقیت انجام شد" %}
+      <div class="order-result-copy">
+        <p class="eyebrow">شمارهٔ سفارش #{{ order.number|stringformat:"s"|slice:":8"|fa_digits }}</p>
+        <h1>سفارش شما <em>ثبت و تأیید شد</em></h1>
+        <p class="order-lead">سفارش شما به آشپزخانه فرستاده شد و به نوبت در حال آماده‌سازی و بسته‌بندی است.</p>
+        
+        <div class="order-info-pill">
+          <span>کد پیگیری بانکی:</span>
+          <strong>{{ order.ref_id|default:"تأیید خودکار" }}</strong>
+        </div>
+
+        <div class="order-result-actions">
+          <a class="button-primary" href="{% url 'customer_profile' %}">مشاهدهٔ در حساب کاربری</a>
+          <a class="plain-button" href="{% url 'menu' %}">بازگشت به منو</a>
+        </div>
+      </div>
+
+    {% elif order.payment_status == "initiated" %}
+      {% include "bakery/_status_animation.html" with status="initiated" label="در حال استعلام وضعیت پرداخت" %}
+      <div class="order-result-copy">
+        <p class="eyebrow">شمارهٔ سفارش #{{ order.number|stringformat:"s"|slice:":8"|fa_digits }}</p>
+        <h1>در انتظار <em>تأیید درگاه بانکی</em></h1>
+        <p class="order-lead">وضعیت پرداخت هنوز از طرف بانک نهایی نشده است. چند لحظه دیگر این صفحه را تازه‌سازی کنید.</p>
+        <div class="order-result-actions">
+          <a class="button-primary" href="{{ request.get_full_path }}">بررسی مجدد وضعیت</a>
+          <a class="plain-button" href="{% url 'menu' %}">بازگشت به منو</a>
+        </div>
+      </div>
+
+    {% else %}
+      {% include "bakery/_status_animation.html" with status="failed" label="پرداخت ناموفق بود" %}
+      <div class="order-result-copy">
+        <p class="eyebrow">شمارهٔ سفارش #{{ order.number|stringformat:"s"|slice:":8"|fa_digits }}</p>
+        <h1>پرداخت <em>انجام نشد</em></h1>
+        <p class="order-lead">سفارش ثبت شده است، اما پرداخت از سوی بانک تکمیل نشد. می‌توانید دوباره برای پرداخت اقدام کنید.</p>
+
+        <form method="post" action="{% url 'retry_payment' order.number %}" class="order-retry-form">
+          {% csrf_token %}
+          <div class="order-result-actions">
+            <button class="button-primary" type="submit">تلاش دوباره برای پرداخت</button>
+            <a class="plain-button" href="{% url 'menu' %}">انصراف و بازگشت به منو</a>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

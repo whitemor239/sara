@@ -1,0 +1,8 @@
+{% load bakery_tags %}
+{% if page.paginator.num_pages > 1 %}
+<nav class="pagination" dir="rtl" aria-label="صفحه‌بندی"><ul>
+<li>{% if previous_url %}<a href="{{ previous_url }}" rel="prev">{% else %}<span aria-disabled="true">{% endif %}<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>قبلی{% if previous_url %}</a>{% else %}</span>{% endif %}</li>
+{% for link in links %}<li>{% if link.number %}<a href="{{ link.url }}" aria-label="صفحهٔ {{ link.number|fa_digits }}" {% if link.number == page.number %}aria-current="page"{% endif %}>{{ link.number|toman }}</a>{% else %}<span aria-label="صفحه‌های دیگر">…</span>{% endif %}</li>{% endfor %}
+<li>{% if next_url %}<a href="{{ next_url }}" rel="next">{% else %}<span aria-disabled="true">{% endif %}بعدی<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>{% if next_url %}</a>{% else %}</span>{% endif %}</li>
+</ul></nav>
+{% endif %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load bakery_tags %}
+{% block title %}سبد خرید | نارون{% endblock %}
+{% block content %}
+<div class="stepper-shell basket-stepper">{% include "bakery/_stepper.html" with current_step=1 %}</div>
+<section class="page-intro compact basket-intro"><h1>سبد <em>خرید</em></h1></section>
+<section class="section-shell basket-layout" id="basket-content">
+  <div class="basket-items">
+    <a class="text-link continue-shopping" href="{% url 'menu' %}">بازگشت به منو و ادامهٔ خرید</a>
+    {% for row in items %}
+    <article class="basket-item" data-product-id="{{ row.product.id }}">
+      <a class="basket-thumb" href="{{ row.product.get_absolute_url }}">
+        {% if row.product.image %}<img src="{{ row.product.image.url }}" srcset="{% catalog_srcset row.product.image %}" sizes="104px" width="104" height="104" alt="{{ row.product.image_alt|default:row.product.name }}">{% else %}<span>{{ row.product.name }}</span>{% endif %}
+      </a>
+      <div class="basket-item-info">
+        <h2><a href="{{ row.product.get_absolute_url }}">{{ row.product.name }}</a></h2>
+        <p>{{ row.product.price|toman }} تومان برای هر عدد</p>
+        <form class="quantity-form" data-basket-update method="post" action="{% url 'update_basket' row.product.id %}">
+          {% csrf_token %}
+          <label for="quantity-{{ row.product.id }}">تعداد</label>
+          <div class="quantity-controls" dir="ltr">
+            <button type="button" class="quantity-step" data-step="-1" aria-label="کم کردن تعداد {{ row.product.name }}">−</button>
+            <input id="quantity-{{ row.product.id }}" name="quantity" type="text" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{1,2}" required value="{{ row.quantity|fa_digits }}" data-saved="{{ row.quantity }}" aria-describedby="quantity-hint-{{ row.product.id }}">
+            <button type="button" class="quantity-step" data-step="1" aria-label="زیاد کردن تعداد {{ row.product.name }}">+</button>
+          </div>
+          <button class="plain-button" type="submit">ثبت تعداد</button>
+        </form>
+        <small id="quantity-hint-{{ row.product.id }}">تعداد ۱ تا ۹۹؛ برای حذف از دکمهٔ زیر استفاده کنید.</small>
+        <form method="post" data-basket-remove action="{% url 'remove_from_basket' row.product.id %}">{% csrf_token %}<button class="remove-button" type="submit">برداشتن از سبد</button></form>
+        <p class="basket-item-error" role="alert"></p>
+      </div>
+      <strong class="basket-line-total">{{ row.line_total|toman }} تومان</strong>
+    </article>
+    {% endfor %}
+    <div class="basket-empty empty-menu" {% if items %}hidden{% endif %}><p>سبدتان فعلاً خالی است.</p><a class="button-primary" href="{% url 'menu' %}">رفتن به منوی امروز</a></div>
+  </div>
+  <aside class="basket-summary" {% if not items %}hidden{% endif %}>
+    <h2>جمع سفارش</h2>
+    <p><span>جمع محصولات، بدون ارسال</span><strong data-basket-total>{{ total|toman }} تومان</strong></p>
+    <small>مبلغ بالا فقط هزینهٔ محصولات است. هزینهٔ ارسال، در صورت نیاز، هنگام هماهنگی مشخص می‌شود و در این مبلغ نیست.</small>
+    <a class="button-primary" data-basket-checkout href="{% url 'checkout' %}">ادامه به ثبت سفارش</a>
+  </aside>
+</section>
+<div class="basket-feedback section-shell" role="status" aria-live="polite"><span></span><button type="button" class="plain-button" id="basket-undo" hidden>بازگرداندن محصول</button></div>
+<div class="basket-mobile-checkout" {% if not items %}hidden{% endif %}><span>جمع محصولات <strong data-basket-total>{{ total|toman }} تومان</strong></span><a class="button-primary" data-basket-checkout href="{% url 'checkout' %}">ثبت سفارش</a></div>
+{% endblock %}

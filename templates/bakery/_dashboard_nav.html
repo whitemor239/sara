@@ -1,0 +1,20 @@
+{% load bakery_tags static %}
+<div class="dashboard-brand">
+  <a href="{% url 'shop_dashboard' %}" class="dashboard-brand-name"><img class="naron-logo" src="{% static 'bakery/naron-logo.webp' %}" width="64" height="64" alt="نارون | Naron Bakery"></a>
+  <small>مدیریت فروشگاه</small>
+</div>
+<nav class="dashboard-links" aria-label="ناوبری داشبورد">
+  <a class="is-current" href="{% url 'shop_dashboard' %}" aria-current="page">نمای کلی</a>
+  <p class="dashboard-nav-label">فروش</p>
+  <a href="#orders">سفارش‌ها <span class="dashboard-nav-count">{{ open_orders|fa_digits }}</span></a>
+  <a href="{% url 'admin:bakery_product_changelist' %}">محصولات <span class="dashboard-nav-count">{{ product_count|fa_digits }}</span></a>
+  <a href="{% url 'admin:bakery_productcategory_changelist' %}">دسته‌بندی منو</a>
+  <a href="{% url 'admin:bakery_dietarytag_changelist' %}">ویژگی‌های غذایی</a>
+  <a href="{% url 'admin:bakery_customerprofile_changelist' %}">مشتریان</a>
+  <p class="dashboard-nav-label">حساب</p>
+  <a href="{% url 'admin:bakery_contactmessage_changelist' %}">پیام‌ها{% if unread_messages %} <span class="dashboard-nav-count">{{ unread_messages|fa_digits }}</span>{% endif %}</a>
+  <a href="{% url 'customer_profile' %}">پروفایل من</a>
+  {% if perms.auth.view_user %}<a href="{% url 'admin:auth_user_changelist' %}">کاربران مدیریت</a>{% endif %}
+  {% if perms.auth.view_group %}<a href="{% url 'admin:auth_group_changelist' %}">گروه‌های دسترسی</a>{% endif %}
+</nav>
+<a class="dashboard-store-link" href="{% url 'home' %}">بازگشت به فروشگاه <span aria-hidden="true">↗</span></a>

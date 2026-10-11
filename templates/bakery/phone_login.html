@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static bakery_tags %}
+{% block title %}ورود به حساب کاربری | نارون{% endblock %}
+{% block extra_head %}
+  <script src="{% static 'bakery/otp.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+<section class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-badge">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      {% if challenge %}
+        <h1>کد تأیید</h1>
+        <p>کد را وارد کنید. کد ۶ رقمی به <bdi class="login-phone-highlight">{{ masked_phone }}</bdi> پیامک شد.</p>
+      {% else %}
+        <h1>ورود یا ثبت‌نام</h1>
+        <p>شماره‌ی موبایل‌تان را وارد کنید تا کد تأیید بفرستیم.</p>
+      {% endif %}
+    </div>
+
+    {% if challenge %}
+      {# Step 1: OTP Entry #}
+      <form class="login-form" method="post" novalidate data-otp-form>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="verify">
+        <div class="form-field{% if code_form.code.errors %} has-error{% endif %}">
+          <label for="{{ code_form.code.id_for_label }}" id="otp-code-label" class="sr-only" data-otp-label>کد تأیید</label>
+          {{ code_form.code }}
+          <div class="otp otp-boxes" dir="ltr" role="group" aria-labelledby="otp-code-label" data-otp-field{% if code_form.code.errors %} data-phase="no"{% endif %} hidden>
+            {% for slot in "012345" %}
+              <input type="text" inputmode="numeric" pattern="[0-9]*" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %} aria-label="رقم {{ forloop.counter|fa_digits }} از ۶" data-otp-slot class="otp-digit">
+            {% endfor %}
+            <div class="otp-ok" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>کد تأیید شد</span>
+            </div>
+          </div>
+          {% if code_form.code.errors %}<span class="field-error" id="otp-server-error">{% for error in code_form.code.errors %}{{ error }}{% endfor %}</span>{% endif %}
+          <small class="field-error" id="otp-client-error" data-otp-error role="alert" hidden>کد باید شامل شش رقم باشد.</small>
+        </div>
+
+        <button class="button-primary login-btn" type="submit">تأیید و ادامه</button>
+
+        <div class="login-footer-actions auth-actions-split">
+          <a class="login-link-btn" href="{% url 'phone_login' %}?change=1">تغییر شماره</a>
+          <div class="resend-block">
+            <span id="resend-timer" class="resend-timer-text">ارسال دوباره تا ۹۰ ثانیه</span>
+            <button type="submit" form="resend-otp-form" id="resend-btn" class="login-link-btn" style="display: none;">ارسال دوباره</button>
+          </div>
+        </div>
+
+        {% if show_development_code %}
+          <div class="development-code">کد آزمایشی برای محیط توسعه: <bdi>۱۲۳۴۵۶</bdi></div>
+        {% endif %}
+      </form>
+
+      <form id="resend-otp-form" method="post" action="{% url 'phone_login' %}" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="resend">
+        <input type="hidden" name="phone" value="{{ challenge.phone }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+      </form>
+
+    {% else %}
+      {# Step 0: Phone Entry #}
+      <form class="login-form" method="post" id="auth-phone-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="send">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <div class="form-field{% if phone_form.phone.errors %} has-error{% endif %}">
+          <label for="auth-phone">شمارهٔ موبایل</label>
+          <input
+            type="tel"
+            name="phone"
+            id="auth-phone"
+            class="phone-input"
+            value="{{ phone_form.phone.value|default:'' }}"
+            placeholder="۰۹۱۲۱۲۳۴۵۶۷"
+            autocomplete="tel"
+            inputmode="tel"
+            dir="ltr"
+            autofocus
+          />
+          {% for error in phone_form.phone.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+          {% for error in phone_form.non_field_errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+        </div>
+
+        <button class="button-primary login-btn" id="auth-phone-submit" type="submit" disabled>دریافت کد</button>
+
+        <p class="login-terms">
+          با ورود، <a href="{% url 'about' %}" class="underline underline-offset-4">قوانین</a> را می‌پذیرید.
+        </p>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

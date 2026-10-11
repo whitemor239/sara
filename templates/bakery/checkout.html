@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load bakery_tags %}
+{% block title %}ثبت سفارش | نارون{% endblock %}
+{% block content %}
+<div class="stepper-shell">
+  {% include "bakery/_stepper.html" with current_step=2 %}
+</div>
+<section class="page-intro compact"><p class="eyebrow">یک قدم تا شیرینیِ تازه</p><h1>ثبت <em>سفارش</em></h1></section>
+<section class="section-shell checkout-layout">
+  <form class="checkout-form" method="post">{% csrf_token %}{% for field in form %}<div class="form-field{% if field.errors %} has-error{% endif %}"><label>{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>{% endfor %}{% if form.non_field_errors %}<p class="field-error">{{ form.non_field_errors }}</p>{% endif %}<button class="button-primary" type="submit">رفتن به پرداخت زرین‌پال</button><p class="secure-note">پرداخت شما در درگاه زرین‌پال انجام می‌شود.</p></form>
+  <aside class="checkout-summary"><h2>سفارش شما</h2>{% for row in items %}<p><span>{{ row.product.name }} × {{ row.quantity }}</span><strong>{{ row.line_total|toman }} تومان</strong></p>{% endfor %}<div class="summary-total"><span>جمع کل</span><strong>{{ total|toman }} تومان</strong></div><small>هزینهٔ ارسال، اگر لازم باشد، جداگانه هماهنگ می‌شود.</small></aside>
+</section>
+{% endblock %}

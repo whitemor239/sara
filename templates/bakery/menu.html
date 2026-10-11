@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}منوی امروز | نارون{% endblock %}
+{% block content %}
+<section class="page-intro compact menu-intro"><p class="eyebrow">چیزی که امروز پختیم</p><h1>منوی <em>امروز</em></h1><p>هرچه اینجاست با دست و به تعداد کم آماده می‌شود.</p></section>
+<section class="section-shell menu-section">
+  {# ── Mobile top bar (filter trigger + search) ── #}
+  <div class="menu-mobile-bar" id="menu-mobile-bar">
+    <button type="button" class="filter-drawer-trigger" id="filter-drawer-trigger" aria-controls="filter-drawer" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      <span>فیلترها</span>
+      {% if selected_category or selected_diet or selected_ingredient %}<span class="filter-active-dot"></span>{% endif %}
+    </button>
+    <div class="menu-search-wrapper">
+      {% include "bakery/_search_input.html" with value=query placeholder="جست‌وجو…" shortcut="" id="mobile-search-input" %}
+    </div>
+  </div>
+
+  <nav class="category-carousel" aria-label="دسته‌بندی محصولات">
+    <button type="button" class="category-scroll" data-category-scroll="-1" aria-label="دسته‌های قبلی">→</button>
+    <div class="category-track">
+      <a class="category-pill{% if not selected_category %} is-active{% endif %}" data-category="" href="{% url 'menu' %}" {% if not selected_category %}aria-current="true"{% endif %}><span aria-hidden="true">◇</span>همهٔ محصولات</a>
+      {% for category in categories %}
+      <a class="category-pill{% if selected_category == category.slug %} is-active{% endif %}" data-category="{{ category.slug }}" href="{% url 'menu' %}?category={{ category.slug|urlencode }}" {% if selected_category == category.slug %}aria-current="true"{% endif %}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 10h16v10H4zM3 10l3-6h12l3 6M8 14h8M8 17h5"/></svg>
+        {{ category.name }}
+      </a>
+      {% endfor %}
+    </div>
+    <button type="button" class="category-scroll" data-category-scroll="1" aria-label="دسته‌های بعدی">←</button>
+  </nav>
+  <div class="menu-layout">
+    {# ── Desktop sidebar (visible ≥801px) ── #}
+    <form class="menu-sidebar" id="menu-filters-form" method="get" action="{% url 'menu' %}">
+      <div class="sidebar-search">
+        {% include "bakery/_search_input.html" with value=query placeholder="نام یا ترکیبات…" shortcut="/" %}
+      </div>
+
+      {% if categories %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">دسته‌بندی</legend>
+        <ul class="filter-list">
+          {% for category in categories %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="category" value="{{ category.slug }}"{% if selected_category == category.slug %} checked{% endif %}>
+              <span class="filter-option-text">{{ category.name }}</span>
+              <span class="filter-option-count">{{ category.products.count }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+
+      {% if dietary_tags %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">ویژگی غذایی</legend>
+        <ul class="filter-list">
+          {% for tag in dietary_tags %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="diet" value="{{ tag.slug }}"{% if selected_diet == tag.slug %} checked{% endif %}>
+              <span class="filter-option-text">{{ tag.name }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+
+      {% if all_ingredients %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">ترکیبات</legend>
+        <ul class="filter-list filter-list-scrollable">
+          {% for ing in all_ingredients %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="ingredient" value="{{ ing }}"{% if selected_ingredient == ing %} checked{% endif %}>
+              <span class="filter-option-text">{{ ing }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+
+      <a class="filter-reset-btn" href="{% url 'menu' %}" id="filter-reset-btn"{% if not selected_category and not selected_diet and not selected_ingredient and not query %} hidden{% endif %}>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        پاک‌کردن فیلترها
+      </a>
+      <noscript><button class="button-primary" type="submit" style="width:100%;margin-top:0.5rem">اعمال فیلتر</button></noscript>
+    </form>
+
+    {# ── Product grid ── #}
+    <div class="menu-main">
+      {% include "bakery/_menu_results.html" %}
+    </div>
+  </div>
+
+  {# ── Mobile filter drawer (hidden by default) ── #}
+  <div class="filter-drawer-backdrop" id="filter-drawer-backdrop" hidden></div>
+  <div class="filter-drawer" id="filter-drawer" role="dialog" aria-modal="true" aria-label="فیلترهای منو" aria-hidden="true" inert>
+    <div class="filter-drawer-header">
+      <h2>فیلترها</h2>
+      <button type="button" class="filter-drawer-close" id="filter-drawer-close" aria-label="بستن فیلترها">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="filter-drawer-body">
+      {# Drawer mirrors sidebar filter groups but uses same form name attrs #}
+      {% if categories %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">دسته‌بندی</legend>
+        <ul class="filter-list">
+          {% for category in categories %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="d_category" value="{{ category.slug }}"{% if selected_category == category.slug %} checked{% endif %}>
+              <span class="filter-option-text">{{ category.name }}</span>
+              <span class="filter-option-count">{{ category.products.count }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+
+      {% if dietary_tags %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">ویژگی غذایی</legend>
+        <ul class="filter-list">
+          {% for tag in dietary_tags %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="d_diet" value="{{ tag.slug }}"{% if selected_diet == tag.slug %} checked{% endif %}>
+              <span class="filter-option-text">{{ tag.name }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+
+      {% if all_ingredients %}
+      <fieldset class="filter-group">
+        <legend class="filter-group-title">ترکیبات</legend>
+        <ul class="filter-list">
+          {% for ing in all_ingredients %}
+          <li>
+            <label class="filter-option">
+              <input type="radio" name="d_ingredient" value="{{ ing }}"{% if selected_ingredient == ing %} checked{% endif %}>
+              <span class="filter-option-text">{{ ing }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endif %}
+    </div>
+    <div class="filter-drawer-footer">
+      <a class="filter-drawer-reset" href="{% url 'menu' %}" id="filter-drawer-reset">پاک‌کردن</a>
+      <button type="button" class="button-primary filter-drawer-apply" id="filter-drawer-apply">بستن فیلترها</button>
+    </div>
+  </div>
+</section>
+{% endblock %}

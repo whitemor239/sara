@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TastyTum</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cream: #F5E8D0;
+            --mocha: #8B4F3D;
+            --dark: #4A2920;
+            --gold: #C9A66B;
+            --gray-light: #F8F7F5;
+            --gray-medium: #8B8B8B;
+        }
+
+        @font-face {
+            font-family: Vazir;
+            src: url("static/bakery/Vazir-Regular.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+        }
+
+        body {
+            font-family: Vazir, Vazirmatn, Tahoma, sans-serif;
+            font-synthesis: none;
+            letter-spacing: 0;
+            background: white;
+            color: var(--dark);
+            line-height: 1.8;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 4rem;
+            position: fixed;
+            top: 0;
+            inset-inline: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.98);
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--gold); }
+
+        .btn-outline {
+            padding: 0.8rem 1.8rem;
+            border: 1px solid var(--gray-medium);
+            background: transparent;
+            color: var(--dark);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--dark);
+            background: var(--dark);
+            color: white;
+        }
+
+        .hero {
+            padding: 10rem 4rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .hero-text h1 .accent {
+            font-weight: 500;
+            color: var(--mocha);
+        }
+
+        .hero-text p {
+            color: var(--gray-medium);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            max-width: 380px;
+        }
+
+        .cta-buttons { display: flex; gap: 1rem; }
+
+        .btn-primary {
+            padding: 1rem 2.5rem;
+            background: var(--dark);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: var(--mocha);
+        }
+
+        .hero-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .food-icon {
+            font-size: 12rem;
+            filter: drop-shadow(0 20px 40px rgba(74, 41, 32, 0.1));
+        }
+
+        .stats {
+            display: flex;
+            gap: 3.5rem;
+            margin-top: 3rem;
+        }
+
+        .stat h4 {
+            font-size: 2rem;
+            color: var(--gold);
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat p {
+            font-size: 0.85rem;
+            color: var(--gray-medium);
+        }
+
+        .section {
+            padding: 6rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--gray-medium);
+            font-size: 0.95rem;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid var(--gray-light);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .product-image {
+            height: 300px;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-info h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+
+        .product-info p {
+            color: var(--gray-medium);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price {
+            color: var(--mocha);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .rating {
+            color: var(--gold);
+            font-size: 0.8rem;
+        }
+
+        .about-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            padding: 6rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .about-image {
+            height: 550px;
+            background: linear-gradient(135deg, var(--mocha), var(--dark));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7rem;
+        }
+
+        .about-content h2 {
+            font-size: 2.2rem;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-content p {
+            color: var(--gray-medium);
+            margin-bottom: 1rem;
+        }
+
+        .about-content .btn-outline {
+            margin-top: 1.5rem;
+        }
+
+        footer {
+            background: var(--gray-light);
+            padding: 4rem;
+            text-align: center;
+        }
+
+        footer h3 {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        footer p {
+            color: var(--gray-medium);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; text-align: center; padding: 8rem 2rem 4rem; }
+            .hero-text p { margin: 0 auto 2rem; }
+            .cta-buttons { justify-content: center; }
+            .stats { justify-content: center; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); }
+            .about-section { grid-template-columns: 1fr; padding: 4rem 2rem; }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 1.5rem 1.5rem; }
+            .nav-links { display: none; }
+            .hero { padding: 7rem 1.5rem 3rem; }
+            .hero-text h1 { font-size: 2.2rem; }
+            .products-grid { grid-template-columns: 1fr; }
+            footer { padding: 3rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">TastyTum</div>
+        <ul class="nav-links">
+            <li><a href="#">خانه</a></li>
+            <li><a href="#">محصولات</a></li>
+            <li><a href="#">درباره ما</a></li>
+            <li><a href="#">تماس</a></li>
+        </ul>
+        <button class="btn-outline">ورود / ثبت‌نام</button>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>شیرینی‌های دست‌ساز<br><span class="accent">با عشق و کیفیت</span></h1>
+            <p>هر محصول با مواد اولیه طبیعی و به روش سنتی تهیه می‌شود تا طعم واقعی اصالت را تجربه کنید</p>
+            <div class="cta-buttons">
+                <button class="btn-primary">مشاهده محصولات</button>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <h4>+۱۵</h4>
+                    <p>سال تجربه</p>
+                </div>
+                <div class="stat">
+                    <h4>+۱۰ هزار</h4>
+                    <p>مشتری راضی</p>
+                </div>
+                <div class="stat">
+                    <h4>۱۰۰٪</h4>
+                    <p>طبیعی</p>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="food-icon">🧁</div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <h2>محصولات ویژه</h2>
+            <p>انتخاب مشتریان وفادار ما</p>
+        </div>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">🥐</div>
+                <div class="product-info">
+                    <h3>کروسان فرانسوی</h3>
+                    <p>کره طبیعی، بافت نرم و لطیف</p>
+                    <div class="product-footer">
+                        <span class="price">۸۵٬۰۰۰ تومان</span>
+                        <span class="rating">★★★★★</span>
+                    </div>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-image">🧁</div>
+                <div class="product-info">
+                    <h3>کاپ‌کیک ویولت</h3>
+                    <p>باغچه میوه تازه، خامه سنگین</p>
+                    <div class="product-footer">
+                        <span class="price">۹۵٬۰۰۰ تومان</span>
+                        <span class="rating">★★★★☆</span>
+                    </div>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-image">🥖</div>
+                <div class="product-info">
+                    <h3>باگت سنتی</h3>
+                    <p>خمیر ترش، آرد کامل</p>
+                    <div class="product-footer">
+                        <span class="price">۶۵٬۰۰۰ تومان</span>
+                        <span class="rating">★★★★☆</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section">
+        <div class="about-image">🎂</div>
+        <div class="about-content">
+            <h2>داستان ما</h2>
+            <p>از سال ۱۳۸۵، ما با عشق و تعهد به کیفیت، بهترین نان‌ها و شیرینی‌های دست‌ساز را برای شما تهیه می‌کنیم.</p>
+            <p>هر محصول با صبر و دقت فراوان ساخته می‌شود تا طعم واقعی اصالت را تجربه کنید.</p>
+            <button class="btn-outline">درباره ما بیشتر بدانید</button>
+        </div>
+    </section>
+
+    <footer>
+        <h3>TastyTum</h3>
+        <p>© ۱۴۰۳ تمامی حقوق محفوظ است</p>
+    </footer>
+</body>
+</html>
