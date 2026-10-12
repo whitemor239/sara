@@ -8,25 +8,28 @@
   <div class="basket-items">
     <a class="text-link continue-shopping" href="{% url 'menu' %}">بازگشت به منو و ادامهٔ خرید</a>
     {% for row in items %}
-    <article class="basket-item" data-product-id="{{ row.product.id }}">
+    <article class="basket-item" data-product-id="{{ row.product.id }}" data-item-key="{{ row.key }}">
       <a class="basket-thumb" href="{{ row.product.get_absolute_url }}">
         {% if row.product.image %}<img src="{{ row.product.image.url }}" srcset="{% catalog_srcset row.product.image %}" sizes="104px" width="104" height="104" alt="{{ row.product.image_alt|default:row.product.name }}">{% else %}<span>{{ row.product.name }}</span>{% endif %}
       </a>
       <div class="basket-item-info">
         <h2><a href="{{ row.product.get_absolute_url }}">{{ row.product.name }}</a></h2>
-        <p>{{ row.product.price|toman }} تومان برای هر عدد</p>
-        <form class="quantity-form" data-basket-update method="post" action="{% url 'update_basket' row.product.id %}">
+        {% if row.weight_label %}
+          <p class="basket-item-weight">وزن: <strong>{{ row.weight_label }}</strong></p>
+        {% endif %}
+        <p>{{ row.unit_price|toman }} تومان برای هر عدد</p>
+        <form class="quantity-form" data-basket-update method="post" action="{% url 'update_basket' row.key %}">
           {% csrf_token %}
-          <label for="quantity-{{ row.product.id }}">تعداد</label>
+          <label for="quantity-{{ row.key }}">تعداد</label>
           <div class="quantity-controls" dir="ltr">
             <button type="button" class="quantity-step" data-step="-1" aria-label="کم کردن تعداد {{ row.product.name }}">−</button>
-            <input id="quantity-{{ row.product.id }}" name="quantity" type="text" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{1,2}" required value="{{ row.quantity|fa_digits }}" data-saved="{{ row.quantity }}" aria-describedby="quantity-hint-{{ row.product.id }}">
+            <input id="quantity-{{ row.key }}" name="quantity" type="text" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{1,2}" required value="{{ row.quantity|fa_digits }}" data-saved="{{ row.quantity }}" aria-describedby="quantity-hint-{{ row.key }}">
             <button type="button" class="quantity-step" data-step="1" aria-label="زیاد کردن تعداد {{ row.product.name }}">+</button>
           </div>
           <button class="plain-button" type="submit">ثبت تعداد</button>
         </form>
-        <small id="quantity-hint-{{ row.product.id }}">تعداد ۱ تا ۹۹؛ برای حذف از دکمهٔ زیر استفاده کنید.</small>
-        <form method="post" data-basket-remove action="{% url 'remove_from_basket' row.product.id %}">{% csrf_token %}<button class="remove-button" type="submit">برداشتن از سبد</button></form>
+        <small id="quantity-hint-{{ row.key }}">تعداد ۱ تا ۹۹؛ برای حذف از دکمهٔ زیر استفاده کنید.</small>
+        <form method="post" data-basket-remove action="{% url 'remove_from_basket' row.key %}">{% csrf_token %}<button class="remove-button" type="submit">برداشتن از سبد</button></form>
         <p class="basket-item-error" role="alert"></p>
       </div>
       <strong class="basket-line-total">{{ row.line_total|toman }} تومان</strong>

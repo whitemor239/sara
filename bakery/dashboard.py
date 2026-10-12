@@ -3,7 +3,10 @@ import re
 from datetime import timedelta
 
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
 from django.db.models import Avg, Q, Sum
+from django.urls import reverse
+from urllib.parse import urlencode
 from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -75,12 +78,22 @@ def dashboard_context(request):
                  "is_peak": bool(amount and amount == max(values))} for index, amount in enumerate(values)]
     period_titles = {"daily": "فروش روزانه", "weekly": "فروش هفتگی", "monthly": "فروش ماهانه"}
     period_notes = {"daily": "امروز، به تفکیک ساعت", "weekly": "از شنبه تا جمعه", "monthly": "۳۰ روز اخیر، به تفکیک روز"}
+    now = timezone.localtime()
+    for index, bar in enumerate(bars):
+        future = (week_start + timedelta(days=index) > today) if period == "weekly" else (index > now.hour if period == "daily" else False)
+        bar["is_future"] = future
+        if future:
+            bar["amount"] = None
+            bar["is_peak"] = False
     query, orders = _matching_orders(request)
+    page = Paginator(orders, 12).get_page(request.GET.get("page"))
+    clear_params = urlencode({"period": period})
+    all_params = urlencode({"q": query}) if query else ""
     return {
         "period": period,
         "period_title": period_titles[period],
         "period_note": period_notes[period],
-        "period_sales": sum(bar["amount"] for bar in bars),
+        "period_sales": sum(bar["amount"] or 0 for bar in bars),
         "today": today,
         "sales_today": daily["sales_sum"] or 0,
         "average_basket": round(daily["basket_average"] or 0),
@@ -93,8 +106,12 @@ def dashboard_context(request):
         "bars": bars,
         "weekly_sales": sum(amounts),
         "query": query,
-        "orders": orders[:12],
-        "has_orders": orders.exists(),
+        "orders": page.object_list,
+        "page_obj": page,
+        "total_results": orders.count(),
+        "has_orders": page.paginator.count > 0,
+        "clear_search_url": f"{request.path}?{clear_params}",
+        "view_all_admin_url": f"{reverse('admin:bakery_order_changelist')}?{all_params}" if all_params else reverse('admin:bakery_order_changelist'),
     }
 
 

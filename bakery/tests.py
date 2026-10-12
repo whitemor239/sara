@@ -170,6 +170,23 @@ class BakeryFlowTests(TestCase):
         self.assertContains(all_products, "کیک روز")
         self.assertContains(all_products, "شیرینی‌ها")
 
+    def test_menu_filters_by_flavor(self):
+        self.product.flavor = "وانیلی، کره‌ای"
+        self.product.save()
+        choc = Product.objects.create(name="کوکی شکلات", price=95000, flavor="شکلاتی")
+        response = self.client.get(reverse("menu"), {"flavor": "شکلاتی"})
+        self.assertContains(response, "کوکی شکلات")
+        self.assertNotContains(response, "نان کره‌ای")
+        self.assertContains(response, "طعم‌ها")
+        all_menu = self.client.get(reverse("menu"))
+        self.assertContains(all_menu, "وانیلی")
+        self.assertContains(all_menu, "شکلاتی")
+
+    def test_product_card_is_clickable_with_data_href(self):
+        response = self.client.get(reverse("menu"))
+        self.assertContains(response, f'data-href="{self.product.get_absolute_url()}"')
+        self.assertContains(response, 'class="product-title-link"')
+
     def test_menu_partial_filters_return_only_results(self):
         bread = ProductCategory.objects.create(name="نان‌ها")
         sweets = ProductCategory.objects.create(name="شیرینی‌ها")
@@ -598,3 +615,165 @@ class ShopDashboardTests(TestCase):
         response = self.client.get(reverse("shop_dashboard"))
         self.assertContains(response, "هنوز سفارشی ثبت نشده است.")
         self.assertEqual(response.context["weekly_sales"], 0)
+
+
+class ProductWeightAndFlavorTests(TestCase):
+    def setUp(self):
+        self.staff = get_user_model().objects.create_superuser(username="admin-weights", email="", password="test-password")
+        self.product = Product.objects.create(
+            name="شیرینی دارچینی",
+            price=90000,
+            flavor="دارچینی، شکری",
+            is_available=True,
+        )
+
+    def test_flavor_admin_widget_and_weight_option_inline(self):
+        self.client.force_login(self.staff)
+        url = reverse("admin:bakery_product_change", args=[self.product.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-flavor-tags-root")
+        self.assertContains(response, "flavor_tags.js")
+        self.assertContains(response, "flavor_tags.css")
+        self.assertContains(response, "گزینه‌های وزن و قیمت")
+
+    def test_weighted_detail_has_discount_placeholder_and_package_context(self):
+        from .models import ProductWeightOption
+
+        self.product.short_description = "شیرینی دارچینی با بافت ترد"
+        self.product.ingredients = "آرد، کره، دارچین"
+        self.product.save()
+        ProductWeightOption.objects.create(product=self.product, weight="250 گرم", price=95000, sort_order=0)
+        ProductWeightOption.objects.create(product=self.product, weight="500 گرم", price=180000, original_price=195000, sort_order=1)
+        ProductWeightOption.objects.create(product=self.product, weight="ناموجود", price=50000, is_available=False)
+
+        response = self.client.get(self.product.get_absolute_url())
+        self.assertContains(response, "قیمت یک بسته · ۲۵۰ گرم")
+        self.assertContains(response, '<span class="price-discount-row" hidden>')
+        self.assertContains(response, '<details class="detail-more">')
+        self.assertNotContains(response, "پختِ امروز")
+        self.assertNotContains(response, "ناموجود")
+
+    def test_unweighted_detail_uses_base_price_without_weight_prompt(self):
+        response = self.client.get(self.product.get_absolute_url())
+        self.assertContains(response, "قیمت محصول")
+        self.assertContains(response, "۹۰٬۰۰۰")
+        self.assertNotContains(response, "data-weight-selector")
+        self.assertNotContains(response, "price-discount-row")
+
+    def test_basket_and_checkout_with_weight_options(self):
+        from .models import ProductWeightOption
+        opt_500 = ProductWeightOption.objects.create(
+            product=self.product,
+            weight="۵۰۰ گرم",
+            price=160000,
+            is_available=True,
+            sort_order=1,
+        )
+        opt_1kg = ProductWeightOption.objects.create(
+            product=self.product,
+            weight="۱ کیلوگرم",
+            price=300000,
+            is_available=True,
+            sort_order=2,
+        )
+
+        detail_resp = self.client.get(self.product.get_absolute_url())
+        self.assertContains(detail_resp, "data-weight-selector")
+        self.assertContains(detail_resp, "۵۰۰ گرم")
+        self.assertContains(detail_resp, "۱ کیلوگرم")
+
+        # 1. Add 500g option
+        add_500 = self.client.post(reverse("add_to_basket", args=[self.product.id]), {"weight_id": opt_500.id})
+        self.assertEqual(add_500.status_code, 302)
+        key_500 = f"{self.product.id}_{opt_500.id}"
+        self.assertEqual(self.client.session["cart"][key_500], 1)
+
+        # 2. Add 1kg option
+        add_1kg = self.client.post(reverse("add_to_basket", args=[self.product.id]), {"weight_id": opt_1kg.id})
+        self.assertEqual(add_1kg.status_code, 302)
+        key_1kg = f"{self.product.id}_{opt_1kg.id}"
+        self.assertEqual(self.client.session["cart"][key_1kg], 1)
+
+        # 3. Check Basket view
+        basket_resp = self.client.get(reverse("basket"))
+        self.assertContains(basket_resp, "۵۰۰ گرم")
+        self.assertContains(basket_resp, "۱ کیلوگرم")
+        self.assertContains(basket_resp, "۴۶۰٬۰۰۰")  # 160000 + 300000
+
+        # 4. Update quantity of 500g option
+        upd_resp = self.client.post(reverse("update_basket", args=[key_500]), {"quantity": 2})
+        self.assertEqual(upd_resp.status_code, 302)
+        self.assertEqual(self.client.session["cart"][key_500], 2)
+
+        # Total is now 2 * 160000 + 300000 = 620000
+        basket_upd_resp = self.client.get(reverse("basket"))
+        self.assertContains(basket_upd_resp, "۶۲۰٬۰۰۰")
+
+        # 5. Checkout
+        checkout_resp = self.client.post(reverse("checkout"), {
+            "customer_name": "سارا تهرانی",
+            "phone": "۰۹۱۲۳۴۵۶۷۸۹",
+            "fulfillment": "delivery",
+            "address": "خیابان فرشته",
+            "note": "",
+        })
+        self.assertEqual(checkout_resp.status_code, 302)
+        order = Order.objects.latest("created_at")
+        self.assertEqual(order.total, 620000)
+        items = list(order.items.order_by("unit_price"))
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0].weight_label, "۵۰۰ گرم")
+        self.assertEqual(items[0].unit_price, 160000)
+        self.assertEqual(items[0].quantity, 2)
+        self.assertEqual(items[1].weight_label, "۱ کیلوگرم")
+        self.assertEqual(items[1].unit_price, 300000)
+        self.assertEqual(items[1].quantity, 1)
+
+        # 6. Remove item from basket
+        rem_resp = self.client.post(reverse("remove_from_basket", args=[key_1kg]))
+        self.assertEqual(rem_resp.status_code, 302)
+        self.assertNotIn(key_1kg, self.client.session.get("cart", {}))
+
+
+class PriceComponentTests(TestCase):
+    def test_render_price_with_discount_and_structure(self):
+        from django.template import Context, Template
+
+        template = Template("{% load bakery_tags %}{% render_price amount=80000 original=100000 size='md' %}")
+        rendered = template.render(Context({}))
+
+        self.assertIn("price-container price-md", rendered)
+        self.assertIn("۸۰٬۰۰۰", rendered)
+        self.assertIn("تومان", rendered)
+        # Verify original struck-through price precedes discount badge
+        orig_idx = rendered.index("۱۰۰٬۰۰۰")
+        badge_idx = rendered.index("۲۰٪ تخفیف")
+        self.assertLess(orig_idx, badge_idx)
+        self.assertIn("price-original", rendered)
+        self.assertIn("price-badge", rendered)
+
+    def test_render_price_without_discount(self):
+        from django.template import Context, Template
+
+        template = Template("{% load bakery_tags %}{% render_price amount=50000 size='sm' %}")
+        rendered = template.render(Context({}))
+
+        self.assertIn("price-container price-sm", rendered)
+        self.assertIn("۵۰٬۰۰۰", rendered)
+        self.assertNotIn("price-discount-row", rendered)
+        self.assertNotIn("تخفیف", rendered)
+
+    def test_dynamic_price_keeps_hidden_discount_row_for_later_selection(self):
+        from django.template import Context, Template
+
+        rendered = Template("{% load bakery_tags %}{% render_price amount=95000 dynamic=True %}").render(Context({}))
+        self.assertIn('<span class="price-discount-row" hidden>', rendered)
+        self.assertIn('<span class="price-original"></span>', rendered)
+        self.assertIn('<span class="price-badge"></span>', rendered)
+
+    def test_discount_percentage_rounds_half_up_like_browser(self):
+        from .templatetags.bakery_tags import render_price
+
+        self.assertEqual(render_price(755, 1000)["off"], 25)
+        self.assertEqual(render_price(1000, 1000)["off"], 0)

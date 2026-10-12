@@ -1,12 +1,12 @@
 {% load bakery_tags %}
-<article class="product-item" data-reveal>
-  <a class="product-photo{% if not product.image %} is-empty{% endif %}" href="{{ product.get_absolute_url }}">
+<article class="product-item" data-reveal data-href="{{ product.get_absolute_url }}">
+  <a class="product-photo{% if not product.image %} is-empty{% endif %}" href="{{ product.get_absolute_url }}" tabindex="-1" aria-hidden="true">
     {% if product.image %}<img src="{{ product.image.url }}" srcset="{% catalog_srcset product.image %}" sizes="(max-width: 799px) 90vw, (max-width: 1200px) 25vw, 270px" width="640" height="640" alt="{{ product.image_alt|default:product.name }}" loading="lazy">{% else %}<span class="photo-pending">عکسِ {{ product.name }}</span>{% endif %}
     {% if product.is_featured %}<span class="product-stamp">پیشنهادِ امروز</span>{% endif %}
   </a>
   <div class="product-body">
     <div class="product-heading">
-      <h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
+      <h3><a class="product-title-link" href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
       <p class="product-desc">{{ product.short_description }}</p>
     </div>
     {% if product.category or product.dietary_tags.all %}
@@ -17,7 +17,12 @@
     {% endif %}
     <div class="product-footer">
       <div class="product-price-wrap">
-        {% render_price amount=product.price original=product.original_price size="sm" %}
+        {% if product.has_weight_options %}
+          <div class="price-start-badge"><small>شروع از</small></div>
+          {% render_price amount=product.starting_price original=product.original_price size="sm" %}
+        {% else %}
+          {% render_price amount=product.price original=product.original_price size="sm" %}
+        {% endif %}
       </div>
       <form method="post" action="{% url 'add_to_basket' product.id %}" class="add-form" data-cart-add>
         {% csrf_token %}

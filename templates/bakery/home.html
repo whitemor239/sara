@@ -24,7 +24,9 @@
   {% else %}<div class="empty-menu"><p>منوی امروز هنوز اینجا چیده نشده.</p><span>به‌زودی شیرینی‌های تازه را می‌بینید.</span></div>{% endif %}
 </section>
 
+{% if featured_reviews %}
 {% include "bakery/_testimonials.html" %}
+{% endif %}
 
 <section class="story section-shell" id="story">
   <div class="story-copy" data-reveal><h2>پختن برای<br><em>آدم‌های خودمان.</em></h2><p>ما به مزه‌های آشنا و پختِ باحوصله دل‌بسته‌ایم. اینجا دربارهٔ ترکیبات هر شیرینی روشن می‌نویسیم و منو را با چیزهایی نگه می‌داریم که واقعاً برای سفارش آماده‌اند.</p><a class="text-link arrow-link" href="{% url 'about' %}">دربارهٔ ما <span aria-hidden="true">←</span></a></div>

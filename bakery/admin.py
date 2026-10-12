@@ -1,6 +1,18 @@
 from django.contrib import admin
 
-from .models import ContactMessage, CustomerProfile, DietaryTag, Order, OrderItem, Product, ProductCategory, ProductReview
+from .models import (
+    ContactMessage,
+    CustomerProfile,
+    DietaryTag,
+    Order,
+    OrderItem,
+    Product,
+    ProductCategory,
+    ProductImage,
+    ProductReview,
+    ProductWeightOption,
+)
+from .widgets import FlavorTagWidget
 
 
 @admin.register(ProductReview)
@@ -26,19 +38,29 @@ class ProductReviewAdmin(admin.ModelAdmin):
 
 
 class ProductImageInline(admin.TabularInline):
-    from .models import ProductImage
     model = ProductImage
     extra = 1
 
 
+class ProductWeightOptionInline(admin.TabularInline):
+    model = ProductWeightOption
+    extra = 1
+    fields = ("weight", "price", "original_price", "is_available", "sort_order")
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    inlines = (ProductImageInline,)
-    list_display = ("name", "category", "price", "original_price", "discount_percent", "is_available", "is_featured", "sort_order")
+    inlines = (ProductWeightOptionInline, ProductImageInline)
+    list_display = ("name", "category", "flavor", "price", "original_price", "discount_percent", "is_available", "is_featured", "sort_order")
     list_filter = ("category", "dietary_tags", "is_available", "is_featured")
     list_editable = ("price", "original_price", "is_available", "is_featured", "sort_order")
-    search_fields = ("name", "short_description", "ingredients")
+    search_fields = ("name", "short_description", "flavor", "ingredients")
     filter_horizontal = ("dietary_tags",)
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == "flavor":
+            kwargs["widget"] = FlavorTagWidget
+        return super().formfield_for_dbfield(db_field, **kwargs)
 
     @admin.display(description="تخفیف")
     def discount_percent(self, obj):
@@ -64,7 +86,7 @@ class DietaryTagAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ("product", "product_name", "unit_price", "quantity")
+    readonly_fields = ("product", "product_name", "weight_label", "unit_price", "quantity")
 
 
 @admin.register(Order)

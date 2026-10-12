@@ -1,0 +1,120 @@
+.flavor-tags-widget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--body-bg, #fffdf8);
+  border: 1px solid var(--border-color, #ded4c6);
+  border-radius: 8px;
+  min-height: 46px;
+  max-width: 680px;
+  direction: rtl;
+  box-sizing: border-box;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.flavor-tags-widget:focus-within {
+  border-color: var(--primary, #56392e);
+  box-shadow: 0 0 0 2px rgba(86, 57, 46, 0.15);
+}
+
+.flavor-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.flavor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 4px;
+  background: #ede0c8;
+  color: #3d221a;
+  border: 1px solid #dfcfb4;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.flavor-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  color: #8b4f3d;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.flavor-chip-remove:hover {
+  color: #b91c1c;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.flavor-tags-input {
+  flex: 1 1 160px;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 4px 6px !important;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--body-fg, #382c25);
+  min-width: 130px;
+}
+
+.flavor-tags-help {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--body-quiet-color, #70665d);
+  margin-top: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .flavor-tags-widget {
+    background: var(--body-bg, #241612);
+    border-color: var(--border-color, #4a342c);
+  }
+  .flavor-chip {
+    background: #3b342e;
+    color: #f5e8d0;
+    border-color: #55443a;
+  }
+  .flavor-chip-remove {
+    color: #d6947c;
+  }
+  .flavor-chip-remove:hover {
+    color: #ff9999;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .flavor-tags-input {
+    color: var(--body-fg, #f5e8d0);
+  }
+}
+
+html[data-theme="dark"] .flavor-tags-widget {
+  background: var(--body-bg, #241612);
+  border-color: var(--border-color, #4a342c);
+}
+html[data-theme="dark"] .flavor-chip {
+  background: #3b342e;
+  color: #f5e8d0;
+  border-color: #55443a;
+}
+html[data-theme="dark"] .flavor-chip-remove {
+  color: #d6947c;
+}

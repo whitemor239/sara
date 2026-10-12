@@ -94,12 +94,12 @@
         group.setAttribute("data-phase", "ok");
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
-          submitBtn.disabled = true;
+          submitBtn.classList.add("is-loading");
           submitBtn.textContent = "در حال بررسی و ورود…";
         }
         setTimeout(() => {
-          form.requestSubmit ? form.requestSubmit() : form.submit();
-        }, 360);
+          form.submit();
+        }, 180);
       }
     };
 

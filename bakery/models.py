@@ -60,6 +60,7 @@ class Product(models.Model):
     image = models.ImageField("تصویر", upload_to="products/", blank=True)
     image_alt = models.CharField("توضیح تصویر", max_length=180, blank=True)
     ingredients = models.CharField("ترکیبات", max_length=240, blank=True)
+    flavor = models.CharField("طعم / مزه", max_length=160, blank=True, help_text="مثلاً: شکلاتی، دارچینی، وانیلی، سیب، کاراملی، میوه‌ای، پنیری، بادامی")
     category = models.ForeignKey(ProductCategory, verbose_name="دسته‌بندی", related_name="products", on_delete=models.SET_NULL, null=True, blank=True)
     dietary_tags = models.ManyToManyField(
         DietaryTag,
@@ -87,6 +88,21 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def has_weight_options(self):
+        return self.weight_options.filter(is_available=True).exists()
+
+    @property
+    def available_weight_options(self):
+        return self.weight_options.filter(is_available=True)
+
+    @property
+    def starting_price(self):
+        first_opt = self.weight_options.filter(is_available=True).order_by("price").first()
+        if first_opt:
+            return first_opt.price
+        return self.price
+
+    @property
     def gallery_images(self):
         images = []
         if self.image:
@@ -108,6 +124,29 @@ class ProductImage(models.Model):
         ordering = ("sort_order", "pk")
         verbose_name = "تصویر محصول"
         verbose_name_plural = "تصاویر محصول"
+
+
+class ProductWeightOption(models.Model):
+    product = models.ForeignKey(Product, related_name="weight_options", on_delete=models.CASCADE, verbose_name="محصول")
+    weight = models.CharField("وزن / بسته‌بندی", max_length=60, help_text="مثلاً: ۲۵۰ گرم، ۵۰۰ گرم، ۱ کیلوگرم، ۴ عددی")
+    price = models.PositiveIntegerField("قیمت فروش (تومان)", validators=[MinValueValidator(1)])
+    original_price = models.PositiveIntegerField(
+        "قیمت قبل از تخفیف (تومان)",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        help_text="اختیاری؛ در صورت تخفیف‌دار بودن این وزن خاص",
+    )
+    is_available = models.BooleanField("موجود", default=True)
+    sort_order = models.PositiveSmallIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        ordering = ("sort_order", "price", "pk")
+        verbose_name = "گزینهٔ وزن و قیمت"
+        verbose_name_plural = "گزینه‌های وزن و قیمت"
+
+    def __str__(self):
+        return f"{self.product.name} — {self.weight} ({self.price:,} تومان)"
 
 
 class Order(models.Model):
@@ -152,7 +191,9 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE, verbose_name="سفارش")
     product = models.ForeignKey(Product, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="محصول")
-    product_name = models.CharField("نام محصول", max_length=120)
+    weight_option = models.ForeignKey(ProductWeightOption, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="گزینهٔ وزن")
+    weight_label = models.CharField("وزن / بسته‌بندی", max_length=60, blank=True)
+    product_name = models.CharField("نام محصول", max_length=160)
     unit_price = models.PositiveIntegerField("قیمت واحد (تومان)")
     quantity = models.PositiveSmallIntegerField("تعداد", validators=[MinValueValidator(1)])
 

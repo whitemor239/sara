@@ -128,7 +128,7 @@ def render_dashboard_chart(bars, height=180):
     plotW = W - padL - padR
     plotH = H - padT - padB
 
-    max_val = max([b.get("amount", 0) for b in bars], default=1) or 1
+    max_val = max([b.get("amount") or 0 for b in bars], default=1) or 1
     # Nice round ticks
     import math
     step = 10 ** max(0, math.floor(math.log10(max_val or 1)))
@@ -159,16 +159,20 @@ def render_dashboard_chart(bars, height=180):
         # RTL: i=0 (first day / Saturday) is at the right edge
         x_slot = round(W - padR - (i + 1) * slot, 1)
         bx = round(x_slot + (slot - bw) / 2, 1)
-        by = get_y(b.get("amount", 0))
-        bar_h = round(padT + plotH - by, 1)
+        amt = b.get("amount")
+        has_amt = amt is not None
+        by = get_y(amt or 0)
+        bar_h = round(padT + plotH - by, 1) if has_amt else 0
         center_x = round(bx + bw / 2, 1)
 
         chart_bars.append({
             "label": b.get("label", "") if len(bars) <= 7 or i % 5 == 0 or i == len(bars)-1 else "",
-            "full_label": b.get("label", ""),
+            "full_label": b.get("full_label", b.get("label", "")),
             "slot": round(slot, 1),
             "tooltip_y": max(2, by - 28),
-            "amount": b.get("amount", 0),
+            "amount": amt,
+            "has_amount": has_amt,
+            "is_future": b.get("is_future", False),
             "is_today": b.get("is_today", False),
             "is_peak": b.get("is_peak", False),
             "x_slot": x_slot,
@@ -178,7 +182,8 @@ def render_dashboard_chart(bars, height=180):
             "bh": bar_h,
             "cx": center_x,
         })
-        line_pts.append((center_x, by))
+        if has_amt:
+            line_pts.append((center_x, by))
 
     path = ""
     for i, (px, py) in enumerate(line_pts):
@@ -208,14 +213,16 @@ def render_dashboard_chart(bars, height=180):
 
 
 @register.inclusion_tag("bakery/_price.html")
-def render_price(amount, original=None, unit="تومان", size="md"):
+def render_price(amount, original=None, unit="تومان", size="md", dynamic=False):
     off = 0
+    orig = None
     try:
         amt = int(amount)
         if original:
             orig = int(original)
             if orig > amt:
-                off = round((1 - (amt / orig)) * 100)
+                # Round half up, matching Math.round in the weight selector.
+                off = (200 * (orig - amt) + orig) // (2 * orig)
     except (TypeError, ValueError):
         amt = amount
         orig = original
@@ -226,5 +233,5 @@ def render_price(amount, original=None, unit="تومان", size="md"):
         "off": off,
         "unit": unit,
         "size": size,
+        "dynamic": dynamic,
     }
-

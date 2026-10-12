@@ -1,46 +1,90 @@
 {% extends "base.html" %}
-{% load bakery_tags %}
+{% load static bakery_tags %}
 {% block title %}{{ product.name }} | نارون{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'bakery/product-detail.css' %}">
+{% endblock %}
 {% block content %}
-<section class="detail-layout section-shell">
+<div class="product-detail-page">
+<nav class="detail-navigation section-shell" aria-label="بازگشت به فهرست محصولات">
+  <a class="back-link" href="{% url 'menu' %}"><span aria-hidden="true">→</span> بازگشت به منو</a>
+</nav>
+<section class="detail-layout section-shell" aria-labelledby="product-title">
   {% include "bakery/_product_gallery.html" %}
 
   <div class="detail-copy">
-    <a class="back-link" href="{% url 'menu' %}">← بازگشت به منو</a>
-    
-    <div class="detail-header">
-      <p class="eyebrow">پختِ امروز</p>
-      <h1>{{ product.name }}</h1>
-    </div>
-
-    {% if product.category or product.dietary_tags.all %}
-      <div class="product-labels detail-labels">
-        {% if product.category %}
-          <span class="category-label">{{ product.category.name }}</span>
-        {% endif %}
-        {% for tag in product.dietary_tags.all %}
-          <span class="diet-label">{{ tag.name }}</span>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    <div class="detail-content">
-      <p class="detail-description">{{ product.description|default:product.short_description }}</p>
-      {% if product.ingredients %}
-        <p class="ingredients"><strong>ترکیبات:</strong> {{ product.ingredients }}</p>
+    <header class="detail-header">
+      <h1 id="product-title">{{ product.name }}</h1>
+      {% if product.short_description or product.description %}
+        <p class="detail-description">{{ product.short_description|default:product.description }}</p>
       {% endif %}
-    </div>
+      {% if product.category or product.dietary_tags.all %}
+        <div class="product-labels detail-labels">
+          {% if product.category %}<span class="category-label">{{ product.category.name }}</span>{% endif %}
+          {% for tag in product.dietary_tags.all %}<span class="diet-label">{{ tag.name }}</span>{% endfor %}
+        </div>
+      {% endif %}
+      {% if product.flavor %}<p class="detail-flavor"><span>طعم</span> {{ product.flavor }}</p>{% endif %}
+    </header>
 
-    <div class="detail-purchase">
-      <div class="detail-price-wrap">
-        {% render_price amount=product.price original=product.original_price size="lg" %}
-      </div>
-      <form method="post" action="{% url 'add_to_basket' product.id %}" class="detail-form" data-cart-add>
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <form method="post" action="{% url 'add_to_basket' product.id %}" id="detail-add-form" class="detail-form" data-cart-add>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% with weight_options=product.available_weight_options %}
+      {% if weight_options %}
+        <fieldset class="detail-weights" data-weight-selector>
+          <legend class="detail-weights-title">وزن / بسته‌بندی</legend>
+          <div class="weight-pills-list">
+            {% for opt in weight_options %}
+              <label class="weight-pill" for="weight-opt-{{ opt.id }}" data-weight-pill>
+                <input
+                  id="weight-opt-{{ opt.id }}"
+                  type="radio"
+                  name="weight_id"
+                  value="{{ opt.id }}"
+                  data-price="{{ opt.price|stringformat:'d' }}"
+                  data-original-price="{% if opt.original_price %}{{ opt.original_price|stringformat:'d' }}{% endif %}"
+                  data-weight-label="{{ opt.weight|fa_digits }}"
+                  {% if forloop.first %}checked{% endif %}
+                  required
+                >
+                <span class="weight-pill-check" aria-hidden="true">✓</span>
+                <span class="weight-pill-name">{{ opt.weight|fa_digits }}</span>
+                <span class="weight-pill-price"><bdi>{{ opt.price|toman }}</bdi> تومان</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <noscript><p class="detail-no-script">قیمت هر بسته کنار وزن آن نوشته شده است.</p></noscript>
+      {% endif %}
+      <div class="detail-purchase">
+        <div class="detail-price-wrap" data-detail-price-wrap role="status" aria-live="polite" aria-atomic="true">
+          {% if weight_options %}
+            {% with first_opt=weight_options.0 %}
+              <p class="detail-price-context" data-price-context>قیمت یک بسته · {{ first_opt.weight|fa_digits }}</p>
+              {% render_price amount=first_opt.price original=first_opt.original_price size="lg" dynamic=True %}
+            {% endwith %}
+          {% else %}
+            <p class="detail-price-context">قیمت محصول</p>
+            {% render_price amount=product.price original=product.original_price size="lg" %}
+          {% endif %}
+        </div>
         <button class="button-primary detail-add-btn" type="submit">افزودن به سبد خرید</button>
-      </form>
-    </div>
+      </div>
+      {% endwith %}
+    </form>
+
+    {% if product.ingredients or product.description and product.short_description and product.description != product.short_description %}
+      <details class="detail-more">
+        <summary>ترکیبات و جزئیات</summary>
+        <div class="detail-more-content">
+          {% if product.description and product.short_description and product.description != product.short_description %}
+            <p>{{ product.description|linebreaksbr }}</p>
+          {% endif %}
+          {% if product.ingredients %}<p><strong>ترکیبات:</strong> {{ product.ingredients }}</p>{% endif %}
+        </div>
+      </details>
+    {% endif %}
   </div>
 </section>
 
@@ -121,4 +165,5 @@
     </div>
   </div>
 </section>
+</div>
 {% endblock %}

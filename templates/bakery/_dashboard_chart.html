@@ -20,18 +20,21 @@
     </g>
     <!-- Bars (RTL order: Saturday on right, Friday on left) -->
     {% for bar in bars %}
-      <g class="chart-bar-group{% if bar.is_today %} is-today{% endif %}{% if bar.is_peak %} is-peak{% endif %}"
+      <g class="chart-bar-group{% if bar.is_today %} is-today{% endif %}{% if bar.is_peak %} is-peak{% endif %}{% if bar.is_future %} is-future{% endif %}"
          tabindex="0"
-         role="button" aria-label="{{ bar.full_label }}: {{ bar.amount|toman }} تومان"
-         data-amount="{{ bar.amount|toman }} تومان"
+         role="button" aria-label="{% if bar.has_amount %}{{ bar.full_label }}: {{ bar.amount|toman }} تومان{% else %}{{ bar.full_label }}: هنوز داده‌ای ثبت نشده{% endif %}"
+         data-amount="{% if bar.has_amount %}{{ bar.amount|toman }} تومان{% else %}هنوز داده‌ای ثبت نشده{% endif %}"
          data-day="{{ bar.full_label }}">
         <!-- Transparent hover target -->
         <rect x="{{ bar.x_slot }}" y="{{ padT }}" width="{{ bar.slot }}" height="{{ plotH }}" class="chart-hover-slot" />
         
         <!-- Bar rect -->
-        <rect x="{{ bar.bx }}" y="{{ bar.by }}" width="{{ bar.bw }}" height="{{ bar.bh }}" rx="5" class="chart-bar-rect" />
-
-        <circle cx="{{ bar.cx }}" cy="{{ bar.by }}" r="3" class="chart-line-dot" />
+        {% if bar.has_amount %}
+          <rect x="{{ bar.bx }}" y="{{ bar.by }}" width="{{ bar.bw }}" height="{{ bar.bh }}" rx="5" class="chart-bar-rect" />
+          <circle cx="{{ bar.cx }}" cy="{{ bar.by }}" r="3" class="chart-line-dot" />
+        {% else %}
+          <rect x="{{ bar.bx }}" y="{{ padT|add:plotH|add:'-3' }}" width="{{ bar.bw }}" height="3" rx="1.5" class="chart-bar-rect chart-bar-future" />
+        {% endif %}
         <!-- X-Axis Day Label -->
         <text x="{{ bar.cx }}" y="{{ H|add:'-8' }}" class="chart-day-label" text-anchor="middle">
           {{ bar.label }}

@@ -26,16 +26,91 @@ from .sms import SMSDeliveryError, send_login_code
 from .zarinpal import Zarinpal, ZarinpalError
 
 
+def _parse_cart_key(key):
+    s = str(key)
+    if "_" in s:
+        parts = s.split("_", 1)
+        try:
+            return int(parts[0]), int(parts[1])
+        except ValueError:
+            return None, None
+    try:
+        return int(s), None
+    except ValueError:
+        return None, None
+
+
 def _cart_products(request):
     cart = request.session.get("cart", {})
-    products = Product.objects.filter(id__in=cart, is_available=True)
+    if not cart:
+        return [], 0
+
+    parsed_entries = []
+    product_ids = set()
+    for raw_key, raw_qty in cart.items():
+        pid, wid = _parse_cart_key(raw_key)
+        if pid is not None:
+            product_ids.add(pid)
+            try:
+                qty = min(max(int(raw_qty), 1), 99)
+            except (ValueError, TypeError):
+                qty = 1
+            parsed_entries.append((str(raw_key), pid, wid, qty))
+
+    if not product_ids:
+        return [], 0
+
+    products_by_id = {
+        p.id: p
+        for p in Product.objects.filter(id__in=product_ids, is_available=True)
+        .select_related("category")
+        .prefetch_related("weight_options", "photos")
+    }
+
     rows = []
     total = 0
-    for product in products:
-        quantity = min(max(int(cart.get(str(product.id), 0)), 1), 99)
-        line_total = product.price * quantity
+    for item_key, pid, wid, quantity in parsed_entries:
+        product = products_by_id.get(pid)
+        if not product:
+            continue
+
+        weight_option = None
+        if wid is not None:
+            weight_option = next((w for w in product.weight_options.all() if w.id == wid and w.is_available), None)
+            if not weight_option:
+                continue
+            unit_price = weight_option.price
+            weight_label = weight_option.weight
+            original_price = weight_option.original_price
+        else:
+            if product.has_weight_options:
+                first_opt = product.weight_options.filter(is_available=True).first()
+                if first_opt:
+                    weight_option = first_opt
+                    unit_price = first_opt.price
+                    weight_label = first_opt.weight
+                    original_price = first_opt.original_price
+                else:
+                    unit_price = product.price
+                    weight_label = ""
+                    original_price = product.original_price
+            else:
+                unit_price = product.price
+                weight_label = ""
+                original_price = product.original_price
+
+        line_total = unit_price * quantity
         total += line_total
-        rows.append({"product": product, "quantity": quantity, "line_total": line_total})
+        rows.append({
+            "key": item_key,
+            "product": product,
+            "weight_option": weight_option,
+            "weight_label": weight_label,
+            "unit_price": unit_price,
+            "original_price": original_price,
+            "quantity": quantity,
+            "line_total": line_total,
+        })
     return rows, total
 
 
@@ -50,18 +125,20 @@ def home(request):
     })
 
 
-def _extract_unique_ingredients():
-    """Parse comma-separated ingredients from all available products, return sorted unique list."""
-    raw = Product.objects.filter(is_available=True).exclude(ingredients="").values_list("ingredients", flat=True)
+def _extract_unique_flavors():
+    """Parse comma-separated flavors from all available products, return sorted unique list."""
+    raw = Product.objects.filter(is_available=True).exclude(flavor="").values_list("flavor", flat=True)
     seen = {}  # normalized -> display
     for text in raw:
         for part in text.replace("،", ",").split(","):
             token = part.strip()
-            if token:
-                key = token
-                if key not in seen:
-                    seen[key] = token
+            if token and token not in seen:
+                seen[token] = token
     return sorted(seen.values())
+
+
+def _extract_unique_ingredients():
+    return _extract_unique_flavors()
 
 
 def _normalize_search_expr(field_name):
@@ -76,10 +153,10 @@ def _normalize_search_expr(field_name):
 def menu(request):
     categories = ProductCategory.objects.filter(products__is_available=True).distinct()
     dietary_tags = DietaryTag.objects.filter(products__is_available=True).distinct()
-    all_ingredients = _extract_unique_ingredients()
+    all_flavors = _extract_unique_flavors()
     selected_category = request.GET.get("category", "")
     selected_diet = request.GET.get("diet", "")
-    selected_ingredient = request.GET.get("ingredient", "").strip()
+    selected_flavor = request.GET.get("flavor", request.GET.get("ingredient", "")).strip()
     query = request.GET.get("q", "").strip()[:80]
     valid_categories = set(categories.values_list("slug", flat=True))
     valid_diets = set(dietary_tags.values_list("slug", flat=True))
@@ -87,8 +164,8 @@ def menu(request):
         selected_category = ""
     if selected_diet not in valid_diets:
         selected_diet = ""
-    if selected_ingredient and selected_ingredient not in all_ingredients:
-        selected_ingredient = ""
+    if selected_flavor and selected_flavor not in all_flavors:
+        selected_flavor = ""
 
     products = Product.objects.filter(is_available=True).select_related("category").prefetch_related("dietary_tags")
     if query:
@@ -97,31 +174,36 @@ def menu(request):
             _search_name=_normalize_search_expr("name"),
             _search_sdesc=_normalize_search_expr("short_description"),
             _search_desc=_normalize_search_expr("description"),
+            _search_flavor=_normalize_search_expr("flavor"),
             _search_ing=_normalize_search_expr("ingredients"),
         ).filter(
             Q(_search_name__icontains=clean_q)
             | Q(_search_sdesc__icontains=clean_q)
             | Q(_search_desc__icontains=clean_q)
+            | Q(_search_flavor__icontains=clean_q)
             | Q(_search_ing__icontains=clean_q)
             | Q(name__icontains=query)
             | Q(short_description__icontains=query)
             | Q(description__icontains=query)
+            | Q(flavor__icontains=query)
             | Q(ingredients__icontains=query)
         )
     if selected_category:
         products = products.filter(category__slug=selected_category)
     if selected_diet:
         products = products.filter(dietary_tags__slug=selected_diet)
-    if selected_ingredient:
-        products = products.filter(ingredients__icontains=selected_ingredient)
+    if selected_flavor:
+        products = products.filter(Q(flavor__icontains=selected_flavor) | Q(ingredients__icontains=selected_flavor))
     context = {
         "products": products.distinct(),
         "categories": categories,
         "dietary_tags": dietary_tags,
-        "all_ingredients": all_ingredients,
+        "all_flavors": all_flavors,
+        "all_ingredients": all_flavors,
         "selected_category": selected_category,
         "selected_diet": selected_diet,
-        "selected_ingredient": selected_ingredient,
+        "selected_flavor": selected_flavor,
+        "selected_ingredient": selected_flavor,
         "query": query,
     }
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -375,11 +457,26 @@ def basket(request):
 @require_POST
 def add_to_basket(request, product_id):
     product = get_object_or_404(Product, id=product_id, is_available=True)
+    weight_id = request.POST.get("weight_id")
     cart = request.session.get("cart", {})
-    key = str(product.id)
+    weight_opt = None
+    if weight_id:
+        try:
+            weight_opt = product.weight_options.filter(id=int(weight_id), is_available=True).first()
+        except (ValueError, TypeError):
+            weight_opt = None
+    elif product.has_weight_options:
+        weight_opt = product.weight_options.filter(is_available=True).first()
+
+    if weight_opt:
+        key = f"{product.id}_{weight_opt.id}"
+        message = f"«{product.name} ({weight_opt.weight})» به سبد خرید اضافه شد."
+    else:
+        key = str(product.id)
+        message = f"«{product.name}» به سبد خرید اضافه شد."
+
     cart[key] = min(int(cart.get(key, 0)) + 1, 99)
     request.session["cart"] = cart
-    message = f"«{product.name}» به سبد خرید اضافه شد."
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"cart_count": sum(int(q) for q in cart.values()), "message": message})
     messages.success(request, message)
@@ -395,15 +492,24 @@ def add_to_basket(request, product_id):
 
 def _basket_json(request):
     rows, total = _cart_products(request)
-    return JsonResponse({"cart_count": sum(row["quantity"] for row in rows), "total": total,
-                         "items": [{"id": row["product"].id, "quantity": row["quantity"],
-                                    "line_total": row["line_total"]} for row in rows]})
+    return JsonResponse({
+        "cart_count": sum(row["quantity"] for row in rows),
+        "total": total,
+        "items": [{
+            "key": row["key"],
+            "id": row["product"].id,
+            "weight_label": row["weight_label"],
+            "unit_price": row["unit_price"],
+            "quantity": row["quantity"],
+            "line_total": row["line_total"],
+        } for row in rows],
+    })
 
 
 @require_POST
-def update_basket(request, product_id):
+def update_basket(request, item_key):
     cart = request.session.get("cart", {})
-    key = str(product_id)
+    key = str(item_key)
     try:
         raw = request.POST.get("quantity", "1").translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
         quantity = int(raw)
@@ -413,7 +519,7 @@ def update_basket(request, product_id):
         return JsonResponse({"error": "تعداد باید بین ۰ و ۹۹ باشد."}, status=400)
     if quantity <= 0:
         cart.pop(key, None)
-    elif Product.objects.filter(id=product_id, is_available=True).exists():
+    elif key in cart or _parse_cart_key(key)[0] is not None:
         cart[key] = min(quantity, 99)
     request.session["cart"] = cart
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -422,9 +528,9 @@ def update_basket(request, product_id):
 
 
 @require_POST
-def remove_from_basket(request, product_id):
+def remove_from_basket(request, item_key):
     cart = request.session.get("cart", {})
-    cart.pop(str(product_id), None)
+    cart.pop(str(item_key), None)
     request.session["cart"] = cart
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return _basket_json(request)
@@ -455,8 +561,15 @@ def checkout(request):
                 total=total,
             )
             OrderItem.objects.bulk_create([
-                OrderItem(order=order, product=row["product"], product_name=row["product"].name,
-                          unit_price=row["product"].price, quantity=row["quantity"])
+                OrderItem(
+                    order=order,
+                    product=row["product"],
+                    weight_option=row["weight_option"],
+                    weight_label=row["weight_label"],
+                    product_name=f"{row['product'].name} ({row['weight_label']})" if row["weight_label"] else row["product"].name,
+                    unit_price=row["unit_price"],
+                    quantity=row["quantity"],
+                )
                 for row in items
             ])
         callback_url = f"{callback_base}{reverse('payment_return')}?order={order.number}"

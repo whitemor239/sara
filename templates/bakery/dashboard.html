@@ -78,21 +78,33 @@
         </div>
 
         <section class="dashboard-orders" id="orders" aria-labelledby="dashboard-orders-title">
-          <div class="dashboard-orders-head"><h2 id="dashboard-orders-title">سفارش‌های اخیر</h2><a href="{% url 'admin:bakery_order_changelist' %}">مشاهدهٔ همه <span aria-hidden="true">←</span></a></div>
-          {% if query %}<p class="dashboard-search-summary">نتایج جست‌وجو برای «{{ query }}» <a href="{{ request.path }}">پاک‌کردن جست‌وجو</a></p>{% endif %}
+          <div class="dashboard-orders-head"><h2 id="dashboard-orders-title">سفارش‌های اخیر</h2><a href="{{ view_all_admin_url }}">مشاهدهٔ همه در پنل مدیریت <span aria-hidden="true">←</span></a></div>
+          {% if query %}<p class="dashboard-search-summary">نتایج جست‌وجو برای «{{ query }}» ({{ total_results|fa_digits }} مورد) <a href="{{ clear_search_url }}">پاک‌کردن جست‌وجو</a></p>{% endif %}
           {% if has_orders %}
             <div class="dashboard-table-wrap"><table>
-              <thead><tr><th scope="col">شماره</th><th scope="col">مشتری</th><th scope="col">مبلغ</th><th scope="col">وضعیت</th><th scope="col">زمان ثبت</th></tr></thead>
+              <thead><tr><th scope="col">شماره</th><th scope="col">مشتری</th><th scope="col">مبلغ</th><th scope="col">وضعیت سفارش</th><th scope="col">وضعیت پرداخت</th><th scope="col">زمان ثبت</th></tr></thead>
               <tbody>{% for order in orders %}
                 <tr>
                   <td data-label="شماره سفارش"><a class="dashboard-order-link" href="{% url 'admin:bakery_order_change' order.pk %}">#{{ order.number|stringformat:"s"|slice:":8"|fa_digits }}</a></td>
                   <td data-label="مشتری">{{ order.customer_name }}</td>
                   <td data-label="مبلغ" class="dashboard-money">{{ order.total|toman }} تومان</td>
-                  <td data-label="وضعیت"><span class="dashboard-status dashboard-status-{{ order.payment_status }}">{{ order.get_status_display }}</span></td>
+                  <td data-label="وضعیت سفارش"><span class="dashboard-status dashboard-order-status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                  <td data-label="وضعیت پرداخت"><span class="dashboard-status dashboard-status-{{ order.payment_status }}">{{ order.get_payment_status_display }}</span></td>
                   <td data-label="زمان ثبت" class="dashboard-order-date"><time datetime="{{ order.created_at|date:'c' }}">{{ order.created_at|jalali_date:"numeric" }}</time></td>
                 </tr>
               {% endfor %}</tbody>
             </table></div>
+            {% if page_obj.has_other_pages %}
+              <div class="dashboard-pagination">
+                {% if page_obj.has_previous %}
+                  <a class="dashboard-action dashboard-action-outline" href="?page={{ page_obj.previous_page_number }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}&amp;period={{ period }}">صفحهٔ قبلی</a>
+                {% endif %}
+                <span class="dashboard-page-indicator">صفحهٔ {{ page_obj.number|fa_digits }} از {{ page_obj.paginator.num_pages|fa_digits }}</span>
+                {% if page_obj.has_next %}
+                  <a class="dashboard-action dashboard-action-outline" href="?page={{ page_obj.next_page_number }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}&amp;period={{ period }}">صفحهٔ بعدی</a>
+                {% endif %}
+              </div>
+            {% endif %}
           {% else %}<div class="dashboard-empty">{% if query %}سفارشی با این جست‌وجو پیدا نشد.{% else %}هنوز سفارشی ثبت نشده است.{% endif %}</div>{% endif %}
         </section>
       </main>

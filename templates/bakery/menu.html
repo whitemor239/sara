@@ -8,7 +8,7 @@
     <button type="button" class="filter-drawer-trigger" id="filter-drawer-trigger" aria-controls="filter-drawer" aria-expanded="false">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
       <span>فیلترها</span>
-      {% if selected_category or selected_diet or selected_ingredient %}<span class="filter-active-dot"></span>{% endif %}
+      {% if selected_category or selected_diet or selected_flavor or selected_ingredient %}<span class="filter-active-dot"></span>{% endif %}
     </button>
     <div class="menu-search-wrapper">
       {% include "bakery/_search_input.html" with value=query placeholder="جست‌وجو…" shortcut="" id="mobile-search-input" %}
@@ -32,7 +32,7 @@
     {# ── Desktop sidebar (visible ≥801px) ── #}
     <form class="menu-sidebar" id="menu-filters-form" method="get" action="{% url 'menu' %}">
       <div class="sidebar-search">
-        {% include "bakery/_search_input.html" with value=query placeholder="نام یا ترکیبات…" shortcut="/" %}
+        {% include "bakery/_search_input.html" with value=query placeholder="نام یا طعم…" shortcut="/" %}
       </div>
 
       {% if categories %}
@@ -68,15 +68,15 @@
       </fieldset>
       {% endif %}
 
-      {% if all_ingredients %}
+      {% if all_flavors %}
       <fieldset class="filter-group">
-        <legend class="filter-group-title">ترکیبات</legend>
+        <legend class="filter-group-title">طعم‌ها</legend>
         <ul class="filter-list filter-list-scrollable">
-          {% for ing in all_ingredients %}
+          {% for flav in all_flavors %}
           <li>
             <label class="filter-option">
-              <input type="radio" name="ingredient" value="{{ ing }}"{% if selected_ingredient == ing %} checked{% endif %}>
-              <span class="filter-option-text">{{ ing }}</span>
+              <input type="radio" name="flavor" value="{{ flav }}"{% if selected_flavor == flav %} checked{% endif %}>
+              <span class="filter-option-text">{{ flav }}</span>
             </label>
           </li>
           {% endfor %}
@@ -84,7 +84,7 @@
       </fieldset>
       {% endif %}
 
-      <a class="filter-reset-btn" href="{% url 'menu' %}" id="filter-reset-btn"{% if not selected_category and not selected_diet and not selected_ingredient and not query %} hidden{% endif %}>
+      <a class="filter-reset-btn" href="{% url 'menu' %}" id="filter-reset-btn"{% if not selected_category and not selected_diet and not selected_flavor and not query %} hidden{% endif %}>
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         پاک‌کردن فیلترها
       </a>
@@ -141,15 +141,15 @@
       </fieldset>
       {% endif %}
 
-      {% if all_ingredients %}
+      {% if all_flavors %}
       <fieldset class="filter-group">
-        <legend class="filter-group-title">ترکیبات</legend>
-        <ul class="filter-list">
-          {% for ing in all_ingredients %}
+        <legend class="filter-group-title">طعم‌ها</legend>
+        <ul class="filter-list filter-list-scrollable">
+          {% for flav in all_flavors %}
           <li>
             <label class="filter-option">
-              <input type="radio" name="d_ingredient" value="{{ ing }}"{% if selected_ingredient == ing %} checked{% endif %}>
-              <span class="filter-option-text">{{ ing }}</span>
+              <input type="radio" name="d_flavor" value="{{ flav }}"{% if selected_flavor == flav %} checked{% endif %}>
+              <span class="filter-option-text">{{ flav }}</span>
             </label>
           </li>
           {% endfor %}

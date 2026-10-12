@@ -176,7 +176,8 @@
     };
     const apply = data => {
       basket.querySelectorAll(".basket-item").forEach(row => {
-        const item = data.items.find(item => String(item.id) === row.dataset.productId);
+        const itemKey = row.dataset.itemKey || row.dataset.productId;
+        const item = data.items.find(item => String(item.key || item.id) === itemKey);
         row.hidden = !item;
         if (item) {
           const input = row.querySelector('[name="quantity"]');
@@ -332,8 +333,7 @@
   // ==========================================
   const filterForm = document.getElementById("menu-filters-form");
   let results = document.getElementById("menu-results");
-  if (!filterForm || !results) return;
-
+  if (filterForm && results) {
   const input = filterForm.querySelector(".search-text-input");
   const clearBtn = filterForm.querySelector(".search-clear-btn");
   const magnifier = filterForm.querySelector(".search-magnifier");
@@ -356,7 +356,7 @@
 
   const hasActiveFilters = () => {
     const fd = new FormData(filterForm);
-    return !!(fd.get("category") || fd.get("diet") || fd.get("ingredient") || input?.value);
+    return !!(fd.get("category") || fd.get("diet") || fd.get("flavor") || fd.get("ingredient") || input?.value);
   };
 
   const formURL = () => {
@@ -551,7 +551,7 @@
   window.addEventListener("popstate", () => {
     const params = new URLSearchParams(location.search);
     // Restore sidebar radios
-    for (const key of ["category", "diet", "ingredient"]) {
+    for (const key of ["category", "diet", "flavor", "ingredient"]) {
       const val = params.get(key) || "";
       filterForm.querySelectorAll(`input[name="${key}"]`).forEach((r) => {
         r.checked = r.value === val;
@@ -569,7 +569,7 @@
   const openDrawer = () => {
     if (!drawer || !drawerBackdrop) return;
     // Sync drawer radios from sidebar state
-    for (const key of ["category", "diet", "ingredient"]) {
+    for (const key of ["category", "diet", "flavor", "ingredient"]) {
       const sidebarChecked = filterForm.querySelector(`input[name="${key}"]:checked`);
       const val = sidebarChecked?.value || "";
       drawer.querySelectorAll(`input[name="d_${key}"]`).forEach((r) => {
@@ -607,7 +607,7 @@
 
   // Apply each selection immediately; keep drawer open for additional choices.
   const applyDrawerFilters = () => {
-    for (const key of ["category", "diet", "ingredient"]) {
+    for (const key of ["category", "diet", "flavor", "ingredient"]) {
       const drawerChecked = drawer.querySelector(`input[name="d_${key}"]:checked`);
       const val = drawerChecked?.value || "";
       filterForm.querySelectorAll(`input[name="${key}"]`).forEach((r) => {
@@ -697,5 +697,67 @@
       mobileControls();
     });
     mobileControls();
+  }
+  } // End of if (filterForm && results)
+
+  // Card click delegation to product details
+  document.addEventListener("click", (event) => {
+    const card = event.target.closest(".product-item[data-href]");
+    if (!card) return;
+    if (event.target.closest("button, form, input, a, select, textarea")) return;
+    const url = card.dataset.href;
+    if (url) {
+      if (event.ctrlKey || event.metaKey) {
+        window.open(url, "_blank");
+      } else {
+        window.location.href = url;
+      }
+    }
+  });
+
+  // Dynamic weight selection on product detail
+  const weightSelector = document.querySelector("[data-weight-selector]");
+  if (weightSelector) {
+    const pills = weightSelector.querySelectorAll("[data-weight-pill]");
+    const priceWrap = document.querySelector("[data-detail-price-wrap]");
+    const numberFormat = new Intl.NumberFormat("fa-IR");
+    const setText = (element, value) => {
+      if (element && element.textContent !== value) element.textContent = value;
+    };
+
+    const updateWeightUI = (radio) => {
+      if (!radio?.checked) return;
+      pills.forEach((pill) => {
+        const input = pill.querySelector('input[type="radio"]');
+        pill.classList.toggle("is-active", Boolean(input && input.checked));
+      });
+
+      if (priceWrap) {
+        const price = Number(radio.dataset.price);
+        const original = Number(radio.dataset.originalPrice);
+        if (!Number.isFinite(price) || price <= 0) return;
+        const percent = Number.isFinite(original) && original > price
+          ? Math.round((original - price) * 100 / original)
+          : 0;
+        setText(priceWrap.querySelector("[data-price-context]"), `قیمت یک بسته · ${radio.dataset.weightLabel}`);
+        setText(priceWrap.querySelector(".price-amount bdi") || priceWrap.querySelector(".price-amount"), numberFormat.format(price));
+
+        const discountRow = priceWrap.querySelector(".price-discount-row");
+        if (discountRow) {
+          setText(discountRow.querySelector(".price-original"), percent > 0 ? numberFormat.format(original) : "");
+          setText(discountRow.querySelector(".price-badge"), percent > 0 ? `${numberFormat.format(percent)}٪ تخفیف` : "");
+          discountRow.hidden = percent <= 0;
+        }
+      }
+    };
+
+    weightSelector.addEventListener("change", (e) => {
+      const radio = e.target.closest('input[type="radio"][name="weight_id"]');
+      if (radio) updateWeightUI(radio);
+    });
+    // Labels and native radios handle pointer and keyboard selection themselves.
+    const syncSelectedWeight = () => updateWeightUI(weightSelector.querySelector('input[name="weight_id"]:checked'));
+    syncSelectedWeight();
+    window.addEventListener("pageshow", syncSelectedWeight);
   }
 })();
