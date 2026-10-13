@@ -54,7 +54,7 @@ class BakeryFlowTests(TestCase):
             context = dashboard_context(factory.get("/dashboard/", {"period": period}))
             self.assertEqual(context["period"], period)
             self.assertEqual(len(context["bars"]), count)
-            self.assertEqual(context["period_sales"], sum(bar["amount"] for bar in context["bars"]))
+            self.assertEqual(context["period_sales"], sum(bar["amount"] for bar in context["bars"] if bar["amount"] is not None))
         self.assertEqual(dashboard_context(factory.get("/dashboard/", {"period": "bad"}))["period"], "weekly")
 
     def test_login_phone_label_matches_input(self):
@@ -777,3 +777,66 @@ class PriceComponentTests(TestCase):
 
         self.assertEqual(render_price(755, 1000)["off"], 25)
         self.assertEqual(render_price(1000, 1000)["off"], 0)
+
+
+class MenuSearchTests(TestCase):
+    def setUp(self):
+        self.cat1 = ProductCategory.objects.create(name="شیرینی تر", slug="wet-pastry")
+        self.cat2 = ProductCategory.objects.create(name="کوکی", slug="cookies")
+        self.p1 = Product.objects.create(
+            name="کوکی ردولوت",
+            slug="red-velvet-cookie",
+            category=self.cat2,
+            price=120000,
+            original_price=140000,
+            short_description="۵۰ گرم کوکی ردولوت شکلات سفید",
+            flavor="شکلات سفید",
+            is_available=True,
+        )
+        self.p2 = Product.objects.create(
+            name="رولت خامه‌ای",
+            slug="cream-roll",
+            category=self.cat1,
+            price=95000,
+            short_description="رولت لطیف و تازه",
+            flavor="وانیلی",
+            is_available=True,
+        )
+
+    def test_menu_search_redirects_to_canonical_menu(self):
+        response = self.client.get(reverse("menu_search"))
+        self.assertRedirects(response, reverse("menu"))
+
+        response_with_q = self.client.get(reverse("menu_search") + "?q=ردولوت")
+        self.assertEqual(response_with_q.status_code, 302)
+        self.assertTrue(response_with_q.url.startswith(reverse("menu") + "?q="))
+
+    def test_menu_search_filter_query(self):
+        response = self.client.get(reverse("menu") + "?q=ردولوت")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["products"]), [self.p1])
+        self.assertContains(response, "کوکی ردولوت")
+        self.assertNotContains(response, "رولت خامه‌ای")
+
+    def test_menu_search_empty_result(self):
+        response = self.client.get(reverse("menu") + "?q=ناموجود123")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "محصولی پیدا نشد")
+        self.assertContains(response, "عبارت دیگری را امتحان کنید")
+        self.assertContains(response, "مشاهده همهٔ شیرینی‌ها")
+
+    def test_menu_has_no_popular_search_suggestions(self):
+        response = self.client.get(reverse("menu"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "query-chip")
+        self.assertNotContains(response, "پرطرفدار")
+
+    def test_menu_search_ajax_results(self):
+        response = self.client.get(
+            reverse("menu") + "?q=ردولوت",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "bakery/_menu_results.html")
+        self.assertContains(response, "کوکی ردولوت")
+        self.assertNotContains(response, "رولت خامه‌ای")

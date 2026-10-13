@@ -6,6 +6,7 @@ from . import dashboard, views
 urlpatterns = [
     path("", views.home, name="home"),
     path("menu/", views.menu, name="menu"),
+    path("menu/search/", views.menu_search, name="menu_search"),
     path("about/", views.about, name="about"),
     path("contact/", views.contact, name="contact"),
     path("dashboard/", dashboard.dashboard, name="shop_dashboard"),

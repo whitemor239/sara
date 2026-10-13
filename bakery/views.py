@@ -211,6 +211,17 @@ def menu(request):
     return render(request, "bakery/menu.html", context)
 
 
+def menu_search(request):
+    """Canonical redirect: single search endpoint is /menu/?q=..."""
+    query = request.GET.get("q", "").strip()
+    target = reverse("menu")
+    if query:
+        from urllib.parse import quote_plus
+        return redirect(f"{target}?q={quote_plus(query)}")
+    return redirect(target)
+
+
+
 def about(request):
     return render(request, "bakery/about.html")
 

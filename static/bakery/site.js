@@ -698,7 +698,19 @@
     });
     mobileControls();
   }
-  } // End of if (filterForm && results)
+
+  document.addEventListener("click", (event) => {
+    const reset = event.target.closest("#menu-dynamic-reset-btn");
+    if (reset) {
+      if (input) input.value = "";
+      if (mobileSearch) mobileSearch.value = "";
+      controls();
+      mobileControls();
+      clearTimeout(timer);
+      load(formURL());
+    }
+  });
+  }
 
   // Card click delegation to product details
   document.addEventListener("click", (event) => {

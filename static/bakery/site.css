@@ -3691,6 +3691,7 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 
 /* Bakery marketplace: menu-only composition and aligned product cards. */
 .menu-intro { text-align: center; padding-block: 36px 28px; }
+.menu-intro.compact { padding-block-end: 2.5rem; }
 .menu-intro .eyebrow { margin-block-end: 8px; }
 .menu-intro h1 { font-size: clamp(30px, 3.5vw, 46px); margin-block: 0 12px; }
 .menu-intro > p:last-child { margin-inline: auto; margin-block: 0; max-width: 38rem; }
@@ -3717,6 +3718,7 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 }
 @media (max-width: 799.98px) {
  .menu-intro { padding-block: 24px; }
+ .menu-intro.compact { padding-block-end: 1.5rem; }
  .menu-section .menu-layout { grid-template-columns: minmax(0, 1fr); }
  .menu-section .product-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
  .menu-section .menu-sidebar { display: none; }
@@ -3896,5 +3898,62 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
   .weight-pill.is-active .weight-pill-price,
   .weight-pill:has(input[type="radio"]:checked) .weight-pill-price {
     color: var(--berry);
+  }
+}
+
+.menu-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  margin-top: 1rem;
+}
+
+.empty-icon-wrap {
+  color: var(--muted);
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.empty-subtitle {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+.empty-reset-btn {
+  min-height: 44px;
+  padding: 0.625rem 1.5rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.empty-reset-btn:hover {
+  opacity: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .empty-reset-btn {
+    background: #ffc5ad;
+    color: #2b211d;
   }
 }

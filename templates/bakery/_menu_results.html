@@ -6,7 +6,18 @@
       {% endfor %}
     </div>
   {% elif categories or dietary_tags %}
-    <div class="empty-menu"><p>با این انتخاب چیزی در منوی امروز پیدا نشد.</p><a class="text-link arrow-link" href="{% url 'menu' %}">دیدن همهٔ شیرینی‌ها <span aria-hidden="true">←</span></a></div>
+    <div class="empty-menu menu-empty-state">
+      <div class="empty-icon-wrap" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </div>
+      <h2 class="empty-title">محصولی پیدا نشد</h2>
+      <p class="empty-subtitle">با این انتخاب چیزی در منوی امروز پیدا نشد. عبارت دیگری را امتحان کنید.</p>
+      <a class="empty-reset-btn" href="{% url 'menu' %}">مشاهده همهٔ شیرینی‌ها</a>
+    </div>
   {% else %}
     <div class="empty-menu"><p>منوی امروز هنوز آماده نشده.</p><span>کمی بعد دوباره سر بزنید.</span></div>
   {% endif %}
