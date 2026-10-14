@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load bakery_tags %}
 {% block title %}منوی امروز | نارون{% endblock %}
 {% block content %}
 <section class="page-intro compact menu-intro"><p class="eyebrow">چیزی که امروز پختیم</p><h1>منوی <em>امروز</em></h1><p>هرچه اینجاست با دست و به تعداد کم آماده می‌شود.</p></section>
@@ -44,7 +45,7 @@
             <label class="filter-option">
               <input type="radio" name="category" value="{{ category.slug }}"{% if selected_category == category.slug %} checked{% endif %}>
               <span class="filter-option-text">{{ category.name }}</span>
-              <span class="filter-option-count">{{ category.products.count }}</span>
+              <span class="filter-option-count">{{ category.products.count|fa_digits }}</span>
             </label>
           </li>
           {% endfor %}
@@ -117,7 +118,7 @@
             <label class="filter-option">
               <input type="radio" name="d_category" value="{{ category.slug }}"{% if selected_category == category.slug %} checked{% endif %}>
               <span class="filter-option-text">{{ category.name }}</span>
-              <span class="filter-option-count">{{ category.products.count }}</span>
+              <span class="filter-option-count">{{ category.products.count|fa_digits }}</span>
             </label>
           </li>
           {% endfor %}

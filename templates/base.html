@@ -9,82 +9,98 @@
   <title>{% block title %}نارون | شیرینی‌های خانگی{% endblock %}</title>
   <link rel="icon" href="{% static 'bakery/favicon.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'bakery/site.css' %}">
+  <link rel="stylesheet" href="{% static 'bakery/navbar.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main">رفتن به محتوای اصلی</a>
-  <header class="site-header-wrapper">
-    <div class="site-header">
-      <button class="header-search-toggle" type="button" aria-label="بازکردن جست‌وجو" aria-expanded="false" aria-controls="header-search-panel">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
-      </button>
-      <form id="header-search-panel" class="header-search-panel" role="search" method="get" action="{% url 'menu' %}" hidden>
-        <label for="header-search">جست‌وجو در منو</label>
-        <div class="header-search-fields"><input id="header-search" type="search" name="q" placeholder="جست‌وجوی شیرینی…" enterkeyhint="search" required><button type="submit">جست‌وجو</button><button type="button" data-search-close aria-label="بستن جست‌وجو">✕</button></div>
-      </form>
-      <a class="wordmark" href="{% url 'home' %}" aria-label="نارون، صفحهٔ اصلی">
-        <img class="naron-logo" src="{% static 'bakery/naron-logo.webp' %}" width="64" height="64" alt="نارون | Naron Bakery">
+  <div class="masthead-scroll-sentinel" data-header-sentinel aria-hidden="true"></div>
+  <header class="site-header-wrapper site-masthead">
+    <div class="masthead-inner">
+      <a class="masthead-brand" href="{% url 'home' %}" aria-label="نارون، صفحهٔ اصلی">
+        {% include "bakery/_wordmark.html" %}
       </a>
 
-      <nav id="primary-navigation" class="nav-pill" aria-label="ناوبری اصلی">
-        <a href="{% url 'home' %}" class="nav-pill-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>
+      <nav id="primary-navigation" class="primary-nav" aria-label="ناوبری اصلی">
+        <a href="{% url 'home' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>
           خانه
-          {% if request.resolver_match.url_name == 'home' %}<span class="active-dot" aria-hidden="true"></span>{% endif %}
         </a>
-        <a href="{% url 'menu' %}" class="nav-pill-item{% if request.resolver_match.url_name == 'menu' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'menu' %}aria-current="page"{% endif %}>
+        <a href="{% url 'menu' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'menu' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'menu' %}aria-current="page"{% endif %}>
           منوی امروز
-          {% if request.resolver_match.url_name == 'menu' %}<span class="active-dot" aria-hidden="true"></span>{% endif %}
         </a>
-        <a href="{% url 'about' %}" class="nav-pill-item{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>
+        <a href="{% url 'about' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>
           دربارهٔ ما
-          {% if request.resolver_match.url_name == 'about' %}<span class="active-dot" aria-hidden="true"></span>{% endif %}
         </a>
-        <a href="{% url 'contact' %}" class="nav-pill-item{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>
+        <a href="{% url 'contact' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>
           تماس با ما
-          {% if request.resolver_match.url_name == 'contact' %}<span class="active-dot" aria-hidden="true"></span>{% endif %}
         </a>
         {% if request.user.is_staff %}
-          <a href="{% url 'shop_dashboard' %}" class="nav-pill-item{% if request.resolver_match.url_name == 'shop_dashboard' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'shop_dashboard' %}aria-current="page"{% endif %}>
+          <a href="{% url 'shop_dashboard' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'shop_dashboard' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'shop_dashboard' %}aria-current="page"{% endif %}>
             داشبورد فروش
-            {% if request.resolver_match.url_name == 'shop_dashboard' %}<span class="active-dot" aria-hidden="true"></span>{% endif %}
           </a>
         {% endif %}
       </nav>
 
-      <div class="header-actions">
+      <div class="masthead-actions">
+        <button class="header-search-toggle masthead-icon-button" type="button" aria-label="بازکردن جست‌وجو" aria-expanded="false" aria-controls="header-search-panel">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+        </button>
         {% if request.user.is_authenticated %}
-          <a class="nav-action-ghost" href="{% url 'customer_profile' %}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 21C20 19.6044 20 18.9067 19.8278 18.3389C19.44 17.0605 18.4395 16.06 17.1611 15.6722C16.5933 15.5 15.8956 15.5 14.5 15.5H9.5C8.10444 15.5 7.40665 15.5 6.83886 15.6722C5.56045 16.06 4.56004 17.0605 4.17224 18.3389C4 18.9067 4 19.6044 4 21M16.5 7.5C16.5 9.98528 14.4853 12 12 12C9.51472 12 7.5 9.98528 7.5 7.5C7.5 5.01472 9.51472 3 12 3C14.4853 3 16.5 5.01472 16.5 7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only"></span></a>
+          <a class="masthead-account" href="{% url 'customer_profile' %}" aria-label="حساب کاربری" {% if request.resolver_match.url_name == 'customer_profile' %}aria-current="page"{% endif %}>
+            {% include "bakery/_account_icon.html" %}<span>حساب کاربری</span>
+          </a>
         {% else %}
-          <a class="nav-action-ghost" href="{% url 'phone_login' %}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 21C20 19.6044 20 18.9067 19.8278 18.3389C19.44 17.0605 18.4395 16.06 17.1611 15.6722C16.5933 15.5 15.8956 15.5 14.5 15.5H9.5C8.10444 15.5 7.40665 15.5 6.83886 15.6722C5.56045 16.06 4.56004 17.0605 4.17224 18.3389C4 18.9067 4 19.6044 4 21M16.5 7.5C16.5 9.98528 14.4853 12 12 12C9.51472 12 7.5 9.98528 7.5 7.5C7.5 5.01472 9.51472 3 12 3C14.4853 3 16.5 5.01472 16.5 7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">ورود</span></a>
+          <a class="masthead-account" href="{% url 'phone_login' %}" aria-label="ورود با موبایل" {% if request.resolver_match.url_name == 'phone_login' %}aria-current="page"{% endif %}>
+            {% include "bakery/_account_icon.html" %}<span>ورود</span>
+          </a>
         {% endif %}
-        <a class="basket-link nav-action-primary" href="{% url 'basket' %}" aria-label="سبد خرید">
+        <a class="basket-link masthead-cart" href="{% url 'basket' %}" aria-label="سبد خرید" {% if request.resolver_match.url_name == 'basket' %}aria-current="page"{% endif %}>
           {% include "bakery/_cart_icon.html" %}
+          <span class="masthead-cart-label">سبد خرید</span>
           <span class="basket-count">{{ cart_count|fa_digits }}</span>
         </a>
-        <button class="menu-toggle" type="button" aria-controls="mobile-nav-drawer" aria-expanded="false" aria-label="بازکردن منو">
+        <button class="menu-toggle masthead-icon-button masthead-menu" type="button" aria-controls="mobile-nav-drawer" aria-expanded="false" aria-label="بازکردن منو">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
         </button>
       </div>
     </div>
+    <form id="header-search-panel" class="header-search-panel masthead-search-panel" role="search" method="get" action="{% url 'menu' %}" hidden>
+      <div class="masthead-search-heading">
+        <label for="header-search">جست‌وجو در منو</label>
+        <button class="masthead-icon-button" type="button" data-search-close aria-label="بستن جست‌وجو">✕</button>
+      </div>
+      <div class="header-search-fields">
+        <input id="header-search" type="search" name="q" placeholder="نام شیرینی یا نان…" enterkeyhint="search" required>
+        <button type="submit">جست‌وجو</button>
+      </div>
+    </form>
   </header>
 
   <div class="search-frost-backdrop" hidden aria-hidden="true"></div>
   <div id="mobile-nav-backdrop" class="nav-drawer-backdrop" aria-hidden="true"></div>
-  <aside id="mobile-nav-drawer" class="nav-drawer" role="dialog" aria-modal="true" aria-label="پیوندهای بیشتر" aria-hidden="true" inert>
+  <aside id="mobile-nav-drawer" class="nav-drawer masthead-drawer" role="dialog" aria-modal="true" aria-label="منوی نارون" aria-hidden="true" inert>
     <div class="nav-drawer-head">
-      <a class="wordmark" href="{% url 'home' %}">
-        <img class="naron-logo" src="{% static 'bakery/naron-logo.webp' %}" width="64" height="64" alt="نارون | Naron Bakery">
+      <a class="masthead-brand" href="{% url 'home' %}" aria-label="نارون، صفحهٔ اصلی">
+        {% include "bakery/_wordmark.html" %}
       </a>
-      <button class="nav-drawer-close" type="button" aria-label="بستن منو">✕</button>
+      <button class="nav-drawer-close masthead-icon-button" type="button" aria-label="بستن منو">✕</button>
     </div>
     <nav class="nav-drawer-links" aria-label="پیوندهای همراه">
+      <a href="{% url 'home' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>خانه</a>
+      <a href="{% url 'menu' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'menu' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'menu' %}aria-current="page"{% endif %}>منوی امروز</a>
       <a href="{% url 'about' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>دربارهٔ ما</a>
       <a href="{% url 'contact' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>تماس با ما</a>
       {% if request.user.is_staff %}
         <a href="{% url 'shop_dashboard' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'shop_dashboard' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'shop_dashboard' %}aria-current="page"{% endif %}>داشبورد فروش</a>
       {% endif %}
     </nav>
+    <div class="masthead-drawer-actions">
+      <a class="masthead-cart" href="{% url 'basket' %}">{% include "bakery/_cart_icon.html" %}<span>سبد خرید</span></a>
+      <a class="masthead-account" href="{% if request.user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'phone_login' %}{% endif %}">
+        {% include "bakery/_account_icon.html" %}<span>{% if request.user.is_authenticated %}حساب کاربری{% else %}ورود با موبایل{% endif %}</span>
+      </a>
+    </div>
   </aside>
   {% if messages %}
     <div class="messages-container" role="region" aria-label="پیام‌های سامانه">

@@ -334,6 +334,25 @@ class ZarinpalClientTests(TestCase):
 class PhoneLoginTests(TestCase):
     phone = "09121234567"
 
+    @override_settings(OTP_RESEND_SECONDS=60)
+    @patch("bakery.views.send_login_code")
+    def test_otp_resend_ring_uses_remaining_server_cooldown(self, send_code):
+        response = self.client.post(reverse("phone_login"), {"action": "send", "phone": self.phone})
+        self.assertContains(response, "otp-resend-progress")
+        self.assertEqual(response.context["resend_duration"], 60)
+        self.assertGreater(response.context["resend_seconds"], 58)
+        challenge = LoginCode.objects.get()
+        LoginCode.objects.filter(pk=challenge.pk).update(created_at=timezone.now() - timedelta(seconds=45))
+        refreshed = self.client.get(reverse("phone_login"))
+        self.assertGreater(refreshed.context["resend_seconds"], 13)
+        self.assertLessEqual(refreshed.context["resend_seconds"], 15)
+        rejected = self.client.post(reverse("phone_login"), {"action": "verify", "code": "invalid"})
+        self.assertLessEqual(rejected.context["resend_seconds"], 15)
+        self.assertNotContains(rejected, "کد تأیید شد")
+        LoginCode.objects.filter(pk=challenge.pk).update(created_at=timezone.now() - timedelta(seconds=61))
+        ready = self.client.get(reverse("phone_login"))
+        self.assertEqual(ready.context["resend_seconds"], 0)
+
     @override_settings(DEBUG=True, OTP_SMS_BACKEND="console")
     @patch("bakery.views.send_login_code")
     def test_local_otp_is_123456_and_six_slot_ui_renders(self, send_code):

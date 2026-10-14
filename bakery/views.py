@@ -1,6 +1,7 @@
 import hmac
 import secrets
 import uuid
+from math import ceil
 from datetime import timedelta
 
 from django.conf import settings
@@ -268,6 +269,8 @@ def _login_context(request, phone_form=None, code_form=None, challenge=None):
         "masked_phone": _masked_phone(challenge.phone) if challenge else "",
         "next_url": _safe_next_url(request, next_candidate),
         "show_development_code": settings.DEBUG and settings.OTP_SMS_BACKEND == "console",
+        "resend_seconds": max(0, ceil((challenge.created_at + timedelta(seconds=settings.OTP_RESEND_SECONDS) - timezone.now()).total_seconds())) if challenge else 0,
+        "resend_duration": settings.OTP_RESEND_SECONDS,
     }
 
 

@@ -172,12 +172,12 @@ button { cursor: pointer; }
 .dashboard-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
 .dashboard-action {
   display: inline-flex;
-  min-height: 2.6rem;
+  min-height: 2.75rem;
   align-items: center;
   gap: .6rem;
   padding: .4rem .9rem;
   border-radius: 6px;
-  font-size: .83rem;
+  font-size: .875rem;
   font-weight: 500;
   transition: background-color 150ms ease, transform 150ms ease;
 }
@@ -190,7 +190,7 @@ button { cursor: pointer; }
   box-shadow: 0 2px 6px rgba(194, 65, 12, 0.2);
 }
 .dashboard-action-primary:hover { background: #9a3412; }
-.dashboard-action-primary span { font-size: 1rem; line-height: 1; }
+.dashboard-action-primary span { font-size: 1rem; line-height: 1.2; }
 
 .dashboard-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; margin-block: 2rem 1.1rem; }
 .dashboard-stat {
@@ -268,7 +268,7 @@ button { cursor: pointer; }
 
 .chart-tick-text {
   font-family: Estedad, Vazir, sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   fill: var(--dashboard-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -302,8 +302,8 @@ button { cursor: pointer; }
 }
 
 .chart-day-label {
-  font-family: Vazir, sans-serif;
-  font-size: 11px;
+  font-family: Estedad, Vazir, sans-serif;
+  font-size: 12px;
   fill: var(--dashboard-muted);
   transition: fill 180ms ease;
 }
@@ -341,7 +341,7 @@ button { cursor: pointer; }
 
 .chart-tooltip-text {
   font-family: Estedad, Vazir, sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   fill: var(--dashboard-ink);
   font-variant-numeric: tabular-nums;
@@ -529,7 +529,7 @@ button { cursor: pointer; }
 
 .dashboard-js .dashboard-menu-toggle { min-height: 44px; }
 .chart-tick-text { font-size: 14px; }
-.chart-day-label { font-size: 11px; }
+.chart-day-label { font-size: 12px; }
 .chart-scroll-hint { display: block; font-size: 12px; color: var(--dashboard-muted); }
 
 .dashboard-mobile-menu[open]::backdrop { animation: admin-backdrop-in 200ms ease-out; }
@@ -546,7 +546,7 @@ button { cursor: pointer; }
 .chart-plot-scroll { flex: 1; min-width: 0; overflow-x: auto; }
 .chart-plot-scroll .rtl-bar-chart { width: 100%; min-width: 480px; height: 200px; }
 
-.chart-fixed-axis .chart-tick-text { font-size: 11px; }
+.chart-fixed-axis .chart-tick-text { font-size: 12px; }
 
 .naron-logo { display: block; width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; border-radius: 50%; }
 

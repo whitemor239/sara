@@ -1,0 +1,5 @@
+{% load static %}
+<picture class="masthead-wordmark">
+  <source media="(prefers-color-scheme: dark)" srcset="{% static 'bakery/naron-wordmark-light.webp' %} 320w, {% static 'bakery/naron-wordmark-light@2x.webp' %} 640w" sizes="(max-width: 49.999rem) 8.5rem, (max-width: 69.999rem) 9rem, 10.5rem">
+  <img class="masthead-logo" src="{% static 'bakery/naron-wordmark.webp' %}" srcset="{% static 'bakery/naron-wordmark.webp' %} 320w, {% static 'bakery/naron-wordmark@2x.webp' %} 640w" sizes="(max-width: 49.999rem) 8.5rem, (max-width: 69.999rem) 9rem, 10.5rem" width="320" height="69" alt="NARON | نارون" decoding="async">
+</picture>

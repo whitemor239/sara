@@ -38,7 +38,7 @@ body {
   margin: 0;
   background: #fbf7ee;
   color: var(--ink);
-  font-family: Vazir, Tahoma, sans-serif;
+  font-family: Estedad, Vazir, Tahoma, sans-serif;
   font-size: 16px;
   line-height: 1.75;
   letter-spacing: 0;
@@ -1494,7 +1494,7 @@ a.stepper-circle:hover {
 .otp-digit {
   font-size: 19px;
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   color: var(--fill-on, var(--ink));
   animation: otp-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -2463,7 +2463,7 @@ a.stepper-circle:hover {
   border-radius: 9999px;
   background: var(--ink);
   color: var(--paper);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0;
@@ -2861,6 +2861,49 @@ a.stepper-circle:hover {
   font-variant-numeric: tabular-nums;
 }
 .login-sep { color: var(--muted); }
+.otp-boxes.otp-flow {
+  gap: 0.375rem;
+  width: min(100%, 18.375rem);
+  margin-block: 0.5rem 0.875rem;
+}
+.form-field .otp-flow input {
+  max-width: 2.75rem;
+  height: 3rem;
+  border-radius: 0.6875rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  transition: border-color 250ms ease, transform 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.form-field .otp-flow input:focus { transform: translateY(-3px); }
+.form-field .otp-flow input.has-digit { animation: none; }
+.otp-entry-hint { font-size: 0.8125rem; line-height: 1.8; color: var(--muted); }
+.otp-flow[data-phase="pending"] { opacity: 0.7; }
+.otp-flow[data-phase="no"] { animation: otp-flow-shake 450ms ease; }
+@keyframes otp-flow-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+}
+.login-footer-actions.auth-actions-split { flex-wrap: wrap; gap: 0.5rem; }
+.login-link-btn.otp-resend { gap: 0.5rem; text-decoration: none; }
+.login-link-btn.otp-resend:disabled { color: var(--muted); cursor: default; opacity: 1; background: none; }
+.otp-resend-ring {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2.5;
+  transform: rotate(-90deg);
+}
+.otp-resend-progress { stroke: var(--berry); stroke-linecap: round; stroke-dasharray: 100; }
+@media (prefers-reduced-motion: reduce) {
+  .form-field .otp-flow input { transition: none; }
+  .form-field .otp-flow input:focus { transform: none; }
+  .otp-flow[data-phase="no"] { animation: none; }
+}
 .resend-form { margin: 0; display: inline; }
 
 /* ==========================================================================
@@ -3290,7 +3333,7 @@ a.stepper-circle:hover {
     border-radius: 9999px;
     background: var(--berry);
     color: #ffffff;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -3320,7 +3363,6 @@ a.stepper-circle:hover {
 }
 
 @media (max-width: 520px) {
-  body { font-size: 15px; }
   .site-header nav { font-size: 0.88rem; }
   .wordmark { font-size: 1.15rem; }
   .hero-copy h1 { font-size: 2.4rem; }
@@ -3470,6 +3512,59 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 .quantity-form input, .quantity-step { width: 44px; min-height: 44px; font-size: 16px; color: var(--ink); }
 .quantity-step { border: 1px solid var(--line); background: var(--paper); border-radius: var(--radius-sm); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
 .quantity-step:hover { background: var(--flour); border-color: var(--berry); }
+.quantity-controls.quantity-stepper {
+  --quantity-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.875rem;
+  background: var(--flour);
+  overflow: hidden;
+}
+.quantity-stepper .quantity-step {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  transition: background-color 200ms ease, transform 350ms var(--quantity-spring);
+}
+.quantity-stepper .quantity-step:hover:not(:disabled) { background: var(--line); }
+.quantity-stepper .quantity-step:active:not(:disabled) { transform: scale(0.8); }
+.quantity-stepper .quantity-step:disabled { opacity: 0.4; cursor: default; }
+.quantity-form .quantity-stepper .quantity-value {
+  width: 3.5rem;
+  min-height: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.quantity-stepper :is(button, input):focus-visible {
+  outline: 2px solid var(--berry);
+  outline-offset: -3px;
+}
+.quantity-stepper .quantity-value.quantity-pop { animation: quantity-pop 400ms var(--quantity-spring); }
+@keyframes quantity-pop {
+  from { transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quantity-stepper .quantity-step { transition: none; }
+  .quantity-stepper .quantity-step:active:not(:disabled) { transform: none; }
+  .quantity-stepper .quantity-value.quantity-pop { animation: none; }
+}
 .quantity-form .plain-button, .remove-button, #basket-undo { min-height: 44px; min-width: 44px; }
 .js .quantity-form .plain-button { display: none !important; }
 .basket-summary { top: calc(var(--header-height, 80px) + 16px); }

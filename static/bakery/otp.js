@@ -46,6 +46,7 @@
       field?.classList.remove("has-error");
       group.removeAttribute("aria-invalid");
       group.removeAttribute("data-phase");
+      inputs.forEach(input => input.removeAttribute("aria-invalid"));
       if (error) error.hidden = true;
       if (serverError) serverError.hidden = true;
     };
@@ -60,6 +61,7 @@
       field?.classList.add("has-error");
       group.setAttribute("aria-invalid", "true");
       group.setAttribute("data-phase", "no");
+      inputs.forEach(input => input.setAttribute("aria-invalid", "true"));
       group.style.animation = "none";
       void group.offsetWidth; // trigger reflow
       group.style.animation = "";
@@ -89,17 +91,8 @@
     let isSubmitting = false;
     const submitIfComplete = () => {
       if (digits.every(Boolean) && !isSubmitting) {
-        isSubmitting = true;
         backing.value = digits.join("");
-        group.setAttribute("data-phase", "ok");
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-          submitBtn.classList.add("is-loading");
-          submitBtn.textContent = "در حال بررسی و ورود…";
-        }
-        setTimeout(() => {
-          form.submit();
-        }, 180);
+        form.requestSubmit();
       }
     };
 
@@ -182,8 +175,18 @@
     });
 
     form.addEventListener("submit", (event) => {
+      if (isSubmitting) {
+        event.preventDefault();
+        return;
+      }
       if (backing.value.length === 6 && digits.every(Boolean)) {
-        group.setAttribute("data-phase", "ok");
+        isSubmitting = true;
+        group.setAttribute("data-phase", "pending");
+        form.setAttribute("aria-busy", "true");
+        inputs.forEach(input => { input.readOnly = true; });
+        const submitBtn = form.querySelector('.login-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = "در حال بررسی کد…";
         return;
       }
       event.preventDefault();
@@ -192,24 +195,33 @@
       focusAt(Math.max(0, digits.findIndex((digit) => !digit)));
     });
 
-    // 90s countdown timer
+    // Match the server cooldown, including after refresh or a failed verification.
     const timerSpan = document.querySelector("#resend-timer");
     const resendBtn = document.querySelector("#resend-btn");
-    let left = 90;
+    const duration = Math.max(1, Number(resendBtn?.dataset.duration) || 60);
+    const deadline = Date.now() + Math.max(0, Number(resendBtn?.dataset.seconds) || 0) * 1000;
+    const progress = resendBtn?.querySelector(".otp-resend-progress");
+    let timeout;
 
     const tick = () => {
       if (!timerSpan || !resendBtn) return;
+      clearTimeout(timeout);
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      resendBtn.disabled = left > 0;
+      if (progress) progress.style.strokeDashoffset = String(100 * (1 - Math.min(left / duration, 1)));
       if (left > 0) {
         timerSpan.textContent = `ارسال دوباره تا ${toFa(left)} ثانیه`;
-        timerSpan.style.display = "inline";
-        resendBtn.style.display = "none";
-        left -= 1;
-        setTimeout(tick, 1000);
+        timeout = setTimeout(tick, 1000);
       } else {
-        timerSpan.style.display = "none";
-        resendBtn.style.display = "inline";
+        timerSpan.textContent = "ارسال دوباره";
       }
     };
     tick();
+    document.addEventListener("visibilitychange", tick);
+    document.querySelector("#resend-otp-form")?.addEventListener("submit", () => {
+      clearTimeout(timeout);
+      resendBtn.disabled = true;
+      timerSpan.textContent = "در حال ارسال کد…";
+    });
   }
 })();

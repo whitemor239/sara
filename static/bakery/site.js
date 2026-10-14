@@ -42,6 +42,12 @@
     if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
   });
   const header = document.querySelector(".site-header-wrapper");
+  const headerSentinel = document.querySelector("[data-header-sentinel]");
+  if (header && headerSentinel && "IntersectionObserver" in window) {
+    new IntersectionObserver(([entry]) => {
+      header.classList.toggle("is-scrolled", !entry.isIntersecting);
+    }, { rootMargin: "8px 0px 0px 0px" }).observe(headerSentinel);
+  }
   const bottomNav = document.querySelector(".mobile-bottom-nav");
   const measureNavigation = () => {
     document.documentElement.style.setProperty("--header-height", `${header?.getBoundingClientRect().height || 0}px`);
@@ -80,12 +86,14 @@
 
   if (menuButton && navDrawer && navBackdrop) {
     const setDrawerOpen = (isOpen) => {
+      if (isOpen) closeSearch();
       navDrawer.classList.toggle("is-open", isOpen);
       navBackdrop.classList.toggle("is-open", isOpen);
       modal(navDrawer, isOpen, menuButton);
       navBackdrop.setAttribute("aria-hidden", String(!isOpen));
       menuButton.setAttribute("aria-expanded", String(isOpen));
-
+      if (isOpen) navDrawerClose?.focus();
+      else if (!menuButton.getClientRects().length) searchToggle?.focus();
     };
 
     menuButton.addEventListener("click", () => setDrawerOpen(true));
@@ -103,8 +111,8 @@
       }
     });
 
-    window.matchMedia("(min-width: 800px)").addEventListener("change", () => {
-      setDrawerOpen(false);
+    window.matchMedia("(min-width: 64rem)").addEventListener("change", event => {
+      if (event.matches && !menuButton.getClientRects().length && navDrawer.classList.contains("is-open")) setDrawerOpen(false);
     });
   }
 
@@ -170,6 +178,19 @@
     let pending = false, undo = null;
     const undoButton = document.querySelector("#basket-undo");
     const feedback = document.querySelector(".basket-feedback span");
+    const syncQuantityLimits = () => {
+      basket.querySelectorAll(".quantity-stepper").forEach(control => {
+        const input = control.querySelector('[name="quantity"]');
+        control.querySelector('[data-step="1"]').disabled = pending || Number(input.dataset.saved) >= 99;
+        control.querySelector('[data-step="-1"]').disabled = pending || Number(input.dataset.saved) <= 0;
+      });
+    };
+    const popQuantity = input => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      input.classList.remove("quantity-pop");
+      void input.offsetWidth;
+      input.classList.add("quantity-pop");
+    };
     const guardCheckout = () => {
       const dirty = [...basket.querySelectorAll('[name="quantity"]')].some(input => !input.closest(".basket-item").hidden && ascii(input.value) !== input.dataset.saved);
       document.querySelectorAll("[data-basket-checkout]").forEach(link => { link.setAttribute("aria-disabled", String(pending || dirty)); });
@@ -181,6 +202,7 @@
         row.hidden = !item;
         if (item) {
           const input = row.querySelector('[name="quantity"]');
+          if (Number(input.dataset.saved) !== item.quantity) popQuantity(input);
           input.value = fa(item.quantity); input.dataset.saved = String(item.quantity);
           row.querySelector(".basket-line-total").textContent = money(item.line_total);
         }
@@ -200,9 +222,10 @@
       const row = form.closest(".basket-item"), input = row.querySelector('[name="quantity"]');
       const quantity = restoring ?? Number(ascii(input.value));
       const error = row.querySelector(".basket-item-error");
-      if (!removing && (!Number.isInteger(quantity) || quantity < 1 || quantity > 99)) {
-        error.textContent = "تعداد باید بین ۱ و ۹۹ باشد."; input.focus(); return;
+      if (!removing && (!Number.isInteger(quantity) || quantity < 0 || quantity > 99 || !ascii(input.value).trim())) {
+        error.textContent = "تعداد باید بین ۰ و ۹۹ باشد."; input.focus(); return;
       }
+      const deleting = removing || quantity === 0;
       error.textContent = "";
       const body = new FormData(form);
       if (!removing) body.set("quantity", String(quantity));
@@ -214,17 +237,18 @@
         const response = await fetch(form.action, {method:"POST", body, credentials:"same-origin", headers:{"X-Requested-With":"XMLHttpRequest"}});
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        if (removing) { undo = {form: row.querySelector("[data-basket-update]"), quantity: Number(input.dataset.saved)}; undoButton.hidden = false; }
+        if (deleting) { undo = {form: row.querySelector("[data-basket-update]"), quantity: Number(input.dataset.saved)}; undoButton.hidden = false; }
         if (restoring !== null) { undo = null; undoButton.hidden = true; }
         apply(data);
-        feedback.textContent = removing ? "محصول از سبد برداشته شد." : "سبد خرید به‌روز شد.";
-        if (removing) undoButton.focus();
+        feedback.textContent = deleting ? "محصول از سبد برداشته شد." : "سبد خرید به‌روز شد.";
+        if (deleting) undoButton.focus();
       } catch (e) {
+        input.value = fa(Number(input.dataset.saved));
         feedback.textContent = "پاسخ دریافت نشد. پیش از تلاش دوباره، صفحه را بازخوانی کنید و سبد را بررسی کنید.";
       } finally {
         pending = false; basket.setAttribute("aria-busy", "false");
         basket.querySelectorAll("button,input:not([type=hidden])").forEach(node => { node.disabled = false; });
-        undoButton.disabled = false; guardCheckout();
+        undoButton.disabled = false; syncQuantityLimits(); guardCheckout();
       }
     };
     basket.addEventListener("submit", event => {
@@ -235,7 +259,11 @@
       const step = event.target.closest("[data-step]");
       if (!step || pending) return;
       const form = step.closest("form"), input = form.querySelector('[name="quantity"]');
-      input.value = fa(Math.min(99, Math.max(1, Number(ascii(input.value)) + Number(step.dataset.step))));
+      const value = Number(ascii(input.value));
+      const current = Number.isInteger(value) && ascii(input.value).trim() ? value : Number(input.dataset.saved);
+      const next = Math.min(99, Math.max(0, current + Number(step.dataset.step)));
+      if (next === current) return;
+      input.value = fa(next);
       send(form);
     });
     basket.addEventListener("input", guardCheckout);
@@ -245,7 +273,7 @@
       const link = event.target.closest('[data-basket-checkout][aria-disabled="true"]');
       if (link) { event.preventDefault(); feedback.textContent = "ابتدا تعداد محصولات را ثبت کنید و منتظر به‌روزرسانی سبد بمانید."; }
     });
-    guardCheckout();
+    syncQuantityLimits(); guardCheckout();
     const checkoutBar = document.querySelector(".basket-mobile-checkout");
     new ResizeObserver(() => document.documentElement.style.setProperty("--basket-action-height", `${checkoutBar.getBoundingClientRect().height}px`)).observe(checkoutBar);
   }

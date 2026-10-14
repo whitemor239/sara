@@ -31,18 +31,13 @@
         <div class="form-field{% if code_form.code.errors %} has-error{% endif %}">
           <label for="{{ code_form.code.id_for_label }}" id="otp-code-label" class="sr-only" data-otp-label>کد تأیید</label>
           {{ code_form.code }}
-          <div class="otp otp-boxes" dir="ltr" role="group" aria-labelledby="otp-code-label" data-otp-field{% if code_form.code.errors %} data-phase="no"{% endif %} hidden>
+          <div class="otp otp-boxes otp-flow" dir="ltr" role="group" aria-labelledby="otp-code-label" aria-describedby="otp-entry-hint{% if code_form.code.errors %} otp-server-error{% endif %}" data-otp-field{% if code_form.code.errors %} data-phase="no"{% endif %} hidden>
             {% for slot in "012345" %}
               <input type="text" inputmode="numeric" pattern="[0-9]*" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %} aria-label="رقم {{ forloop.counter|fa_digits }} از ۶" data-otp-slot class="otp-digit">
             {% endfor %}
-            <div class="otp-ok" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>کد تأیید شد</span>
-            </div>
           </div>
-          {% if code_form.code.errors %}<span class="field-error" id="otp-server-error">{% for error in code_form.code.errors %}{{ error }}{% endfor %}</span>{% endif %}
+          <small id="otp-entry-hint" class="otp-entry-hint">کد ۶ رقمی را تایپ کنید یا کامل بچسبانید.</small>
+          {% if code_form.code.errors %}<span class="field-error" id="otp-server-error" role="alert">{% for error in code_form.code.errors %}{{ error }}{% endfor %}</span>{% endif %}
           <small class="field-error" id="otp-client-error" data-otp-error role="alert" hidden>کد باید شامل شش رقم باشد.</small>
         </div>
 
@@ -51,8 +46,13 @@
         <div class="login-footer-actions auth-actions-split">
           <a class="login-link-btn" href="{% url 'phone_login' %}?change=1">تغییر شماره</a>
           <div class="resend-block">
-            <span id="resend-timer" class="resend-timer-text">ارسال دوباره تا ۹۰ ثانیه</span>
-            <button type="submit" form="resend-otp-form" id="resend-btn" class="login-link-btn" style="display: none;">ارسال دوباره</button>
+            <button type="submit" form="resend-otp-form" id="resend-btn" class="login-link-btn otp-resend" data-seconds="{{ resend_seconds }}" data-duration="{{ resend_duration }}" {% if resend_seconds %}disabled{% endif %}>
+              <svg class="otp-resend-ring" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle class="otp-resend-progress" cx="12" cy="12" r="9" pathLength="100"></circle>
+              </svg>
+              <span id="resend-timer">{% if resend_seconds %}ارسال دوباره تا {{ resend_seconds|fa_digits }} ثانیه{% else %}ارسال دوباره{% endif %}</span>
+            </button>
           </div>
         </div>
 

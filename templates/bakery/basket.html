@@ -21,14 +21,14 @@
         <form class="quantity-form" data-basket-update method="post" action="{% url 'update_basket' row.key %}">
           {% csrf_token %}
           <label for="quantity-{{ row.key }}">تعداد</label>
-          <div class="quantity-controls" dir="ltr">
+          <div class="quantity-controls quantity-stepper" dir="ltr" role="group" aria-label="تعداد {{ row.product.name }}">
             <button type="button" class="quantity-step" data-step="-1" aria-label="کم کردن تعداد {{ row.product.name }}">−</button>
-            <input id="quantity-{{ row.key }}" name="quantity" type="text" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{1,2}" required value="{{ row.quantity|fa_digits }}" data-saved="{{ row.quantity }}" aria-describedby="quantity-hint-{{ row.key }}">
-            <button type="button" class="quantity-step" data-step="1" aria-label="زیاد کردن تعداد {{ row.product.name }}">+</button>
+            <input id="quantity-{{ row.key }}" class="quantity-value" name="quantity" type="text" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{1,2}" maxlength="2" required value="{{ row.quantity|fa_digits }}" data-saved="{{ row.quantity }}" aria-describedby="quantity-hint-{{ row.key }}">
+            <button type="button" class="quantity-step" data-step="1" aria-label="زیاد کردن تعداد {{ row.product.name }}" {% if row.quantity == 99 %}disabled{% endif %}>+</button>
           </div>
           <button class="plain-button" type="submit">ثبت تعداد</button>
         </form>
-        <small id="quantity-hint-{{ row.key }}">تعداد ۱ تا ۹۹؛ برای حذف از دکمهٔ زیر استفاده کنید.</small>
+        <small id="quantity-hint-{{ row.key }}">تا ۹۹ عدد؛ با رسیدن تعداد به صفر، محصول از سبد حذف می‌شود.</small>
         <form method="post" data-basket-remove action="{% url 'remove_from_basket' row.key %}">{% csrf_token %}<button class="remove-button" type="submit">برداشتن از سبد</button></form>
         <p class="basket-item-error" role="alert"></p>
       </div>
