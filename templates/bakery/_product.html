@@ -27,10 +27,33 @@
       <form method="post" action="{% url 'add_to_basket' product.id %}" class="add-form" data-cart-add>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <button class="small-button" type="submit">
+        {% with weights=product.available_weight_options %}
+          {% if weights %}
+          <details class="card-weight-menu">
+            <summary class="small-button">+ افزودن به سفارش</summary>
+            <div class="card-weight-panel">
+          {% endif %}
+          {% if weights|length == 1 %}
+            <input type="hidden" name="weight_id" value="{{ weights.0.id }}">
+            <span class="card-weight-fixed">{{ weights.0.weight|fa_digits }}</span>
+          {% elif weights|length > 1 %}
+            <label class="sr-only" for="card-weight-{{ product.id }}">انتخاب وزن {{ product.name }}</label>
+            <select class="card-weight-select" id="card-weight-{{ product.id }}" name="weight_id" required>
+              <option value="" selected disabled>انتخاب وزن</option>
+              {% for option in weights %}
+                <option value="{{ option.id }}">{{ option.weight|fa_digits }} · {{ option.price|toman }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+        <button class="small-button" type="submit" aria-label="افزودن {{ product.name }} به سفارش">
           <span class="btn-icon" aria-hidden="true">+</span>
-          <span>افزودن به سفارش</span>
+          <span>{% if weights %}تأیید و افزودن{% else %}افزودن به سفارش{% endif %}</span>
         </button>
+          {% if weights %}
+            </div>
+          </details>
+          {% endif %}
+        {% endwith %}
       </form>
     </div>
   </div>

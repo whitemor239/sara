@@ -155,6 +155,8 @@
         badge.style.display = data.cart_count > 0 ? "" : "none";
         badge.setAttribute("aria-label", `${count} قلم در سبد خرید`);
         cartStatus.textContent = data.message;
+        const weightMenu = form.querySelector('.card-weight-menu');
+        if (weightMenu) { weightMenu.open = false; weightMenu.querySelector('summary').focus(); }
       } catch (error) {
         // Never resend automatically: server may have accepted POST before connection failed.
         cartStatus.textContent = "پاسخ سبد دریافت نشد. پیش از تلاش دوباره، سبد خرید را بررسی کنید.";
@@ -166,6 +168,19 @@
         form.removeAttribute("aria-busy");
         delete form.dataset.pending;
       }
+    });
+  });
+
+  document.addEventListener("click", event => {
+    document.querySelectorAll('.card-weight-menu[open]').forEach(menu => {
+      if (!menu.contains(event.target)) menu.open = false;
+    });
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    document.querySelectorAll('.card-weight-menu[open]').forEach(menu => {
+      menu.open = false;
+      menu.querySelector('summary').focus();
     });
   });
 

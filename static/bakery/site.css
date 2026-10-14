@@ -3823,7 +3823,10 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 }
 
 .menu-section .product-photo { height: auto; min-height: 0; max-height: none; flex-shrink: 0; }
-.menu-section .product-grid { grid-auto-rows: 1fr; }
+.menu-section .product-grid { grid-auto-rows: 1fr; align-items: stretch; }
+.menu-section .product-item { height: 100%; }
+.home-page .product-grid { align-items: stretch; }
+.home-page .product-footer { margin-block-start: auto; }
 .menu-section .product-price-wrap { min-height: 43px; }
 
 /* Reference finish: quieter surfaces, tighter catalog rhythm. */
@@ -4045,6 +4048,48 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 .empty-reset-btn:hover {
   opacity: 0.9;
 }
+
+.product-item .add-form:has(.card-weight-select),
+.product-item .add-form:has(.card-weight-fixed) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.card-weight-fixed { color: var(--body-copy); font-size: 0.875rem; }
+.product-item .add-form:has(.card-weight-menu) { display: block; position: relative; }
+.card-weight-menu > summary { list-style: none; cursor: pointer; min-height: 2.75rem; }
+.card-weight-menu > summary::-webkit-details-marker { display: none; }
+.card-weight-panel {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(100% + 0.5rem);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 0.5rem 1.5rem rgba(74, 41, 32, 0.15);
+}
+.product-item:has(.card-weight-menu[open]) { z-index: 3; overflow: visible; }
+.product-item .add-form:has(.card-weight-select) .small-button,
+.product-item .add-form:has(.card-weight-fixed) .small-button { min-height: 2.75rem; padding-inline: 0.75rem; }
+.card-weight-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+}
+.product-item .product-footer:has(.card-weight-select) { flex-direction: column; align-items: stretch; }
+.product-item .add-form:has(.card-weight-select) .small-button { width: 100%; }
 
 @media (prefers-color-scheme: dark) {
   .empty-reset-btn {

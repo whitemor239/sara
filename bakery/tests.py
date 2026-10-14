@@ -680,6 +680,32 @@ class ProductWeightAndFlavorTests(TestCase):
         self.assertNotContains(response, "data-weight-selector")
         self.assertNotContains(response, "price-discount-row")
 
+    def test_catalog_card_displays_single_weight(self):
+        from .models import ProductWeightOption
+        option = ProductWeightOption.objects.create(product=self.product, weight="۵۰۰ گرم", price=160000)
+        for page in ("home", "menu"):
+            response = self.client.get(reverse(page))
+            self.assertContains(response, '<span class="card-weight-fixed">۵۰۰ گرم</span>', html=True)
+            self.assertContains(response, f'<input type="hidden" name="weight_id" value="{option.id}">', html=True)
+            self.assertNotContains(response, 'class="card-weight-select"')
+
+    def test_catalog_cards_require_weight_selection(self):
+        from .models import ProductWeightOption
+        first = ProductWeightOption.objects.create(product=self.product, weight="۵۰۰ گرم", price=160000)
+        second = ProductWeightOption.objects.create(product=self.product, weight="۱ کیلوگرم", price=300000)
+        unavailable = ProductWeightOption.objects.create(product=self.product, weight="۲ کیلوگرم", price=500000, is_available=False)
+        for page in ("menu", "home"):
+            response = self.client.get(reverse(page))
+            self.assertContains(response, 'name="weight_id" required')
+            self.assertContains(response, f'<option value="{first.id}">')
+            self.assertContains(response, f'<option value="{second.id}">')
+            self.assertNotContains(response, f'<option value="{unavailable.id}">')
+            self.assertContains(response, 'selected disabled>انتخاب وزن')
+        response = self.client.post(reverse("add_to_basket", args=[self.product.id]), {"weight_id": second.id}, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.session["cart"][f"{self.product.id}_{second.id}"], 1)
+        self.assertNotIn(f"{self.product.id}_{first.id}", self.client.session["cart"])
+
     def test_basket_and_checkout_with_weight_options(self):
         from .models import ProductWeightOption
         opt_500 = ProductWeightOption.objects.create(

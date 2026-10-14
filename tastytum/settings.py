@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import storages
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or ("dev-only-secret-key-not-for-deployment" if DEBUG else "")
@@ -30,6 +32,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "bakery.apps.BakeryConfig",
+    "storages",
+    'django.contrib.staticfiles',
+    'gdstorage',
 ]
 
 MIDDLEWARE = [
@@ -102,3 +107,6 @@ if not DEBUG:
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = '<path to your json private key file>'
