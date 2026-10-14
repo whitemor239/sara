@@ -1,8 +1,39 @@
-.venv/
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
 
-/backups/
-*.sqlite3
-staticfiles/
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
 .env
+.env.*
+
+# Django
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+
+# Backups
+backups/
+*.bak
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests / Coverage
+.coverage
+.pytest_cache/
+htmlcov/
