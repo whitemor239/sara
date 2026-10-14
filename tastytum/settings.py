@@ -33,7 +33,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "bakery.apps.BakeryConfig",
     "storages",
-    'django.contrib.staticfiles',
     'gdstorage',
 ]
 
