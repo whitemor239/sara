@@ -1,8 +1,10 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 
 
@@ -57,6 +59,21 @@ class Product(models.Model):
         validators=[MinValueValidator(1)],
         help_text="در صورت وارد کردن عددی بزرگتر از قیمت فروش، درصد تخفیف و خط‌خوردگی قیمت به صورت خودکار نمایش داده می‌شود.",
     )
+    auto_pricing = models.BooleanField(
+        "محاسبهٔ خودکار قیمت از مواد اولیه", default=False,
+        help_text="با تغییر قیمت مواد، دستور مصرف، وزن یا درصد سود، قیمت فروش دوباره محاسبه می‌شود.",
+    )
+    recipe_yield_grams = models.DecimalField(
+        "وزن محصول نهاییِ دستور پخت (گرم)", max_digits=12, decimal_places=3,
+        null=True, blank=True, validators=[MinValueValidator(Decimal("0.001"))],
+        help_text="وزن محصول آماده پس از پخت؛ مثلاً اگر مواد برای یک کیک ۵۰۰ گرمی است، ۵۰۰ وارد کنید. برای محصول بدون گزینهٔ وزن، قیمت همین مقدار به‌عنوان قیمت یک محصول ثبت می‌شود.",
+    )
+    profit_percent = models.DecimalField(
+        "درصد سود روی هزینهٔ مواد", max_digits=7, decimal_places=2, default=Decimal("0"),
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="مثلاً هزینهٔ ۱۰۰٬۰۰۰ تومان با سود ۳۰٪، قیمت فروش ۱۳۰٬۰۰۰ تومان می‌شود. دستمزد، بسته‌بندی و سایر هزینه‌ها در این محاسبه لحاظ نمی‌شوند.",
+    )
+    price_calculated_at = models.DateTimeField("آخرین محاسبهٔ قیمت", null=True, blank=True, editable=False)
     image = models.ImageField("تصویر", upload_to="products/", blank=True)
     image_alt = models.CharField("توضیح تصویر", max_length=180, blank=True)
     ingredients = models.CharField("ترکیبات", max_length=240, blank=True)
@@ -82,10 +99,16 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = f"pastry-{uuid.uuid4().hex[:12]}"
         super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.auto_pricing and not self.recipe_yield_grams:
+            raise ValidationError({"recipe_yield_grams": "برای محاسبهٔ خودکار، وزن محصول نهایی دستور پخت را وارد کنید."})
 
     @property
     def has_weight_options(self):
@@ -136,6 +159,11 @@ class ProductImage(models.Model):
 class ProductWeightOption(models.Model):
     product = models.ForeignKey(Product, related_name="weight_options", on_delete=models.CASCADE, verbose_name="محصول")
     weight = models.CharField("وزن / بسته‌بندی", max_length=60, help_text="مثلاً: ۲۵۰ گرم، ۵۰۰ گرم، ۱ کیلوگرم، ۴ عددی")
+    weight_grams = models.DecimalField(
+        "وزن محاسباتی (گرم)", max_digits=12, decimal_places=3, null=True, blank=True,
+        validators=[MinValueValidator(Decimal("0.001"))],
+        help_text="برای عنوان‌هایی مثل «۵۰۰ گرم» یا «۱ کیلوگرم» خودکار تشخیص داده می‌شود؛ برای بسته‌های عددی، وزن واقعی کل بسته را وارد کنید.",
+    )
     price = models.PositiveIntegerField("قیمت فروش (تومان)", validators=[MinValueValidator(1)])
     original_price = models.PositiveIntegerField(
         "قیمت قبل از تخفیف (تومان)",
@@ -154,6 +182,59 @@ class ProductWeightOption(models.Model):
 
     def __str__(self):
         return f"{self.product.name} — {self.weight} ({self.price:,} تومان)"
+
+    @property
+    def resolved_weight_grams(self):
+        from .pricing import parse_weight_grams
+        return self.weight_grams if self.weight_grams is not None else parse_weight_grams(self.weight)
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+
+class Ingredient(models.Model):
+    name = models.CharField("نام مادهٔ اولیه", max_length=120, unique=True)
+    price_per_kg = models.PositiveIntegerField("قیمت هر کیلو (تومان)", validators=[MinValueValidator(1)])
+    updated_at = models.DateTimeField("آخرین به‌روزرسانی قیمت", auto_now=True)
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "مادهٔ اولیه"
+        verbose_name_plural = "مواد اولیه و قیمت روز"
+        constraints = [models.CheckConstraint(condition=models.Q(price_per_kg__gt=0), name="ingredient_positive_price")]
+
+    def __str__(self):
+        return self.name
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+
+class RecipeIngredient(models.Model):
+    product = models.ForeignKey(Product, related_name="recipe_items", on_delete=models.CASCADE, verbose_name="محصول")
+    ingredient = models.ForeignKey(Ingredient, related_name="recipe_items", on_delete=models.PROTECT, verbose_name="مادهٔ اولیه")
+    quantity_grams = models.DecimalField(
+        "مقدار مصرف در دستور پایه (گرم)", max_digits=12, decimal_places=3,
+        validators=[MinValueValidator(Decimal("0.001"))],
+    )
+
+    class Meta:
+        ordering = ("pk",)
+        verbose_name = "مادهٔ مصرفی دستور پخت"
+        verbose_name_plural = "مواد مصرفی دستور پخت"
+        constraints = [
+            models.UniqueConstraint(fields=("product", "ingredient"), name="unique_product_recipe_ingredient"),
+            models.CheckConstraint(condition=models.Q(quantity_grams__gt=0), name="recipe_positive_quantity"),
+        ]
+
+    def __str__(self):
+        return f"{self.product.name}: {self.ingredient.name}"
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
 
 class Order(models.Model):
