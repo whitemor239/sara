@@ -1,0 +1,21 @@
+{% load bakery_tags %}
+<div class="recipe-pricing-summary">
+  {% if not auto_pricing %}<p>پیش‌نمایش محاسبه است؛ برای اعمال روی قیمت فروش، محاسبهٔ خودکار را فعال و ذخیره کنید.</p>{% endif %}
+  <p>دستور پایه: <strong>{{ pricing.grams|floatformat:"-3"|fa_digits }} گرم محصول نهایی</strong>؛ سود روی هزینهٔ مواد: <strong>{{ pricing.profit_percent|floatformat:"-2"|fa_digits }}٪</strong>.</p>
+  <table>
+    <caption>مواد مصرفی دستور پایه</caption>
+    <thead><tr><th scope="col">مادهٔ اولیه</th><th scope="col">مصرف (گرم)</th><th scope="col">هزینه (تومان)</th></tr></thead>
+    <tbody>{% for item in pricing.ingredients %}<tr><td>{{ item.name }}</td><td>{{ item.grams|floatformat:"-3"|fa_digits }}</td><td>{{ item.cost|cost_toman }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <p>جمع هزینهٔ مواد: <strong>{{ pricing.cost|cost_toman }} تومان</strong>؛ قیمت عادی دستور پایه: <strong>{{ pricing.price|toman }} تومان</strong>؛ قیمت نهایی: <strong>{{ pricing.selling_price|toman }} تومان</strong>.</p>
+  {% if pricing.weights %}
+  <table>
+    <caption>قیمت و مصرف متناسب با هر وزن</caption>
+    <thead><tr><th scope="col">گزینهٔ محصول</th><th scope="col">وزن (گرم)</th><th scope="col">هزینهٔ مواد (تومان)</th><th scope="col">قیمت عادی (تومان)</th><th scope="col">قیمت نهایی (تومان)</th><th scope="col">مقدار مصرف مواد</th></tr></thead>
+    <tbody>{% for option in pricing.weights %}
+      <tr><td>{{ option.label|fa_digits }}</td><td>{{ option.grams|floatformat:"-3"|fa_digits }}</td><td>{{ option.cost|cost_toman }}</td><td>{{ option.price|toman }}</td><td><strong>{{ option.selling_price|toman }}</strong></td><td>{% for item in option.ingredients %}{{ item.name }}: {{ item.grams|floatformat:"-3"|fa_digits }} گرم{% if not forloop.last %}<br>{% endif %}{% endfor %}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  {% endif %}
+  <p>این محاسبه فقط شامل مواد اولیه است؛ تخفیف‌ها و هزینه‌های دیگری به‌صورت خودکار به آن اضافه نشده‌اند.</p>
+</div>

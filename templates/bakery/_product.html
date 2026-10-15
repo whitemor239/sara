@@ -19,9 +19,9 @@
       <div class="product-price-wrap">
         {% if product.has_weight_options %}
           <div class="price-start-badge"><small>شروع از</small></div>
-          {% render_price amount=product.starting_price original=product.original_price size="sm" %}
+          {% render_price amount=product.starting_price original=product.starting_original_price size="sm" %}
         {% else %}
-          {% render_price amount=product.price original=product.original_price size="sm" %}
+          {% render_price amount=product.selling_price original=product.price_before_discount size="sm" %}
         {% endif %}
       </div>
       <form method="post" action="{% url 'add_to_basket' product.id %}" class="add-form" data-cart-add>
@@ -41,7 +41,7 @@
             <select class="card-weight-select" id="card-weight-{{ product.id }}" name="weight_id" required>
               <option value="" selected disabled>انتخاب وزن</option>
               {% for option in weights %}
-                <option value="{{ option.id }}">{{ option.weight|fa_digits }} · {{ option.price|toman }}</option>
+                <option value="{{ option.id }}">{{ option.weight|fa_digits }} · {{ option.selling_price|toman }}</option>
               {% endfor %}
             </select>
           {% endif %}

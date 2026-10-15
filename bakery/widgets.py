@@ -1,6 +1,26 @@
 from django import forms
 from django.utils.safestring import mark_safe
 
+from .money import grouped_integer, normalize_money_input
+
+
+class MoneyInput(forms.TextInput):
+    def __init__(self, attrs=None):
+        super().__init__({"inputmode": "numeric", "dir": "ltr", "data-money-input": "", "autocomplete": "off", **(attrs or {})})
+
+    def format_value(self, value):
+        return grouped_integer(value)
+
+    class Media:
+        js = ("bakery/admin_money.js",)
+
+
+class MoneyField(forms.IntegerField):
+    widget = MoneyInput
+
+    def to_python(self, value):
+        return super().to_python(normalize_money_input(value))
+
 
 class FlavorTagWidget(forms.TextInput):
     class Media:

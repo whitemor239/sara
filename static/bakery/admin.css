@@ -62,6 +62,13 @@ body { line-height: 1.65; letter-spacing: 0; font-synthesis: none; }
 :is(input, select, textarea, button, a):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 input[type="submit"], .button, .submit-row input, .object-tools a { border-radius: 6px; }
 
+.form-row.field-pricing_summary .flex-container { flex-direction: column; align-items: stretch; }
+.form-row.field-pricing_summary .readonly { margin-inline-start: 0; min-width: 0; }
+.recipe-pricing-summary { max-width: 100%; overflow-x: auto; }
+.recipe-pricing-summary caption { text-align: start; padding-block: 0.75rem; font-weight: 600; }
+.recipe-pricing-summary th, .recipe-pricing-summary td { vertical-align: top; font-variant-numeric: tabular-nums; }
+input[data-money-input] { direction: ltr; text-align: left; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
 @media (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px; }
 }

@@ -8,6 +8,7 @@
   <p class="dashboard-nav-label">فروش</p>
   <a href="#orders">سفارش‌ها <span class="dashboard-nav-count">{{ open_orders|fa_digits }}</span></a>
   <a href="{% url 'admin:bakery_product_changelist' %}">محصولات <span class="dashboard-nav-count">{{ product_count|fa_digits }}</span></a>
+  {% if perms.bakery.view_ingredient %}<a href="{% url 'admin:bakery_ingredient_changelist' %}">مواد اولیه و قیمت روز</a>{% endif %}
   <a href="{% url 'admin:bakery_productcategory_changelist' %}">دسته‌بندی منو</a>
   <a href="{% url 'admin:bakery_dietarytag_changelist' %}">ویژگی‌های غذایی</a>
   <a href="{% url 'admin:bakery_customerprofile_changelist' %}">مشتریان</a>

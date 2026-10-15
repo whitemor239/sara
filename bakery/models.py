@@ -46,12 +46,39 @@ class DietaryTag(models.Model):
         super().save(*args, **kwargs)
 
 
-class Product(models.Model):
+class SalePricingMixin:
+    @property
+    def regular_price(self):
+        # Retain compatibility with older records using original_price + price.
+        return self.original_price if self.original_price and self.original_price > self.price else self.price
+
+    @property
+    def selling_price(self):
+        if self.discounted_price and 0 < self.discounted_price < self.regular_price:
+            return self.discounted_price
+        return self.price
+
+    @property
+    def price_before_discount(self):
+        return self.regular_price if self.selling_price < self.regular_price else None
+
+    @property
+    def discount_percent(self):
+        if self.regular_price and self.selling_price < self.regular_price:
+            return int(round((1 - self.selling_price / self.regular_price) * 100))
+        return 0
+
+
+class Product(SalePricingMixin, models.Model):
     name = models.CharField("نام محصول", max_length=120)
     slug = models.SlugField("نشانی انگلیسی (اختیاری)", max_length=140, unique=True, blank=True)
     short_description = models.CharField("توضیح کوتاه", max_length=220, blank=True)
     description = models.TextField("توضیحات", blank=True)
-    price = models.PositiveIntegerField("قیمت با تخفیف / فروش (تومان)", validators=[MinValueValidator(1)])
+    price = models.PositiveIntegerField("قیمت عادی / پایه (تومان)", validators=[MinValueValidator(1)])
+    discounted_price = models.PositiveIntegerField(
+        "قیمت با تخفیف (تومان)", default=0, blank=True,
+        help_text="اختیاری؛ خالی یا صفر یعنی بدون تخفیف. برای اعمال تخفیف، مبلغی کمتر از قیمت عادی وارد کنید.",
+    )
     original_price = models.PositiveIntegerField(
         "قیمت اصلی قبل از تخفیف (تومان)",
         null=True,
@@ -77,6 +104,10 @@ class Product(models.Model):
     image = models.ImageField("تصویر", upload_to="products/", blank=True)
     image_alt = models.CharField("توضیح تصویر", max_length=180, blank=True)
     ingredients = models.CharField("ترکیبات", max_length=240, blank=True)
+    ingredient_choices = models.ManyToManyField(
+        "Ingredient", verbose_name="ترکیبات", related_name="listed_products", blank=True,
+        help_text="از مواد اولیه انتخاب کنید. مواد ثبت‌شده در دستور پخت هم در ترکیبات محصول نمایش داده می‌شوند.",
+    )
     flavor = models.CharField("طعم / مزه", max_length=160, blank=True, help_text="مثلاً: شکلاتی، دارچینی، وانیلی، سیب، کاراملی، میوه‌ای، پنیری، بادامی")
     category = models.ForeignKey(ProductCategory, verbose_name="دسته‌بندی", related_name="products", on_delete=models.SET_NULL, null=True, blank=True)
     dietary_tags = models.ManyToManyField(
@@ -109,6 +140,8 @@ class Product(models.Model):
         super().clean()
         if self.auto_pricing and not self.recipe_yield_grams:
             raise ValidationError({"recipe_yield_grams": "برای محاسبهٔ خودکار، وزن محصول نهایی دستور پخت را وارد کنید."})
+        if not self.auto_pricing and self.discounted_price and self.regular_price and self.discounted_price >= self.regular_price:
+            raise ValidationError({"discounted_price": "قیمت با تخفیف باید کمتر از قیمت عادی باشد؛ برای حذف تخفیف صفر وارد کنید."})
 
     @property
     def has_weight_options(self):
@@ -120,16 +153,30 @@ class Product(models.Model):
 
     @property
     def starting_price(self):
-        first_opt = self.weight_options.filter(is_available=True).order_by("price").first()
+        first_opt = self.cheapest_weight_option
         if first_opt:
-            return first_opt.price
-        return self.price
+            return first_opt.selling_price
+        return self.selling_price
 
     @property
-    def discount_percent(self):
-        if self.original_price and self.original_price > self.price:
-            return int(round((1 - (self.price / self.original_price)) * 100))
-        return 0
+    def cheapest_weight_option(self):
+        return min(self.available_weight_options, key=lambda option: option.selling_price, default=None)
+
+    @property
+    def starting_original_price(self):
+        option = self.cheapest_weight_option
+        return option.price_before_discount if option else self.price_before_discount
+
+    @property
+    def display_ingredients(self):
+        if not self.pk:
+            return self.ingredients
+        names = [ingredient.name for ingredient in self.ingredient_choices.all()]
+        names.extend(item.ingredient.name for item in self.recipe_items.all())
+        if not names:
+            return self.ingredients
+        names.extend(part.strip() for part in self.ingredients.replace("،", ",").split(",") if part.strip())
+        return "، ".join(dict.fromkeys(names))
 
 
     @property
@@ -156,7 +203,7 @@ class ProductImage(models.Model):
         verbose_name_plural = "تصاویر محصول"
 
 
-class ProductWeightOption(models.Model):
+class ProductWeightOption(SalePricingMixin, models.Model):
     product = models.ForeignKey(Product, related_name="weight_options", on_delete=models.CASCADE, verbose_name="محصول")
     weight = models.CharField("وزن / بسته‌بندی", max_length=60, help_text="مثلاً: ۲۵۰ گرم، ۵۰۰ گرم، ۱ کیلوگرم، ۴ عددی")
     weight_grams = models.DecimalField(
@@ -164,7 +211,11 @@ class ProductWeightOption(models.Model):
         validators=[MinValueValidator(Decimal("0.001"))],
         help_text="برای عنوان‌هایی مثل «۵۰۰ گرم» یا «۱ کیلوگرم» خودکار تشخیص داده می‌شود؛ برای بسته‌های عددی، وزن واقعی کل بسته را وارد کنید.",
     )
-    price = models.PositiveIntegerField("قیمت فروش (تومان)", validators=[MinValueValidator(1)])
+    price = models.PositiveIntegerField("قیمت عادی (تومان)", validators=[MinValueValidator(1)])
+    discounted_price = models.PositiveIntegerField(
+        "قیمت با تخفیف (تومان)", default=0, blank=True,
+        help_text="اختیاری؛ خالی یا صفر یعنی بدون تخفیف برای این وزن.",
+    )
     original_price = models.PositiveIntegerField(
         "قیمت قبل از تخفیف (تومان)",
         null=True,

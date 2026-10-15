@@ -117,6 +117,12 @@ def toman(value):
     return f"{amount:,}".replace(",", "٬").translate(_digit_map)
 
 
+@register.filter
+def cost_toman(value):
+    from ..money import decimal_toman
+    return decimal_toman(value)
+
+
 @register.inclusion_tag("bakery/_dashboard_chart.html")
 def render_dashboard_chart(bars, height=180):
     W = 600

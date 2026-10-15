@@ -80,25 +80,25 @@ def _cart_products(request):
             weight_option = next((w for w in product.weight_options.all() if w.id == wid and w.is_available), None)
             if not weight_option:
                 continue
-            unit_price = weight_option.price
+            unit_price = weight_option.selling_price
             weight_label = weight_option.weight
-            original_price = weight_option.original_price
+            original_price = weight_option.price_before_discount
         else:
             if product.has_weight_options:
                 first_opt = product.weight_options.filter(is_available=True).first()
                 if first_opt:
                     weight_option = first_opt
-                    unit_price = first_opt.price
+                    unit_price = first_opt.selling_price
                     weight_label = first_opt.weight
-                    original_price = first_opt.original_price
+                    original_price = first_opt.price_before_discount
                 else:
-                    unit_price = product.price
+                    unit_price = product.selling_price
                     weight_label = ""
-                    original_price = product.original_price
+                    original_price = product.price_before_discount
             else:
-                unit_price = product.price
+                unit_price = product.selling_price
                 weight_label = ""
-                original_price = product.original_price
+                original_price = product.price_before_discount
 
         line_total = unit_price * quantity
         total += line_total
@@ -188,6 +188,8 @@ def menu(request):
             | Q(description__icontains=query)
             | Q(flavor__icontains=query)
             | Q(ingredients__icontains=query)
+            | Q(ingredient_choices__name__icontains=query)
+            | Q(recipe_items__ingredient__name__icontains=query)
         )
     if selected_category:
         products = products.filter(category__slug=selected_category)
@@ -427,7 +429,7 @@ def phone_logout(request):
 
 
 def product_detail(request, slug):
-    product = get_object_or_404(Product.objects.select_related("category").prefetch_related("dietary_tags"), slug=slug, is_available=True)
+    product = get_object_or_404(Product.objects.select_related("category").prefetch_related("dietary_tags", "ingredient_choices", "recipe_items__ingredient"), slug=slug, is_available=True)
     reviews = product.reviews.filter(is_approved=True)
 
     initial = {}

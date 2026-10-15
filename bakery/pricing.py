@@ -49,14 +49,18 @@ def calculate_product_pricing(product):
             raise ValidationError(f"وزن محاسباتیِ گزینهٔ «{option.weight}» را به گرم وارد کنید.")
         factor = grams / product.recipe_yield_grams
         option_cost = cost * factor
+        option_price = selling_price(option_cost, product.profit_percent)
         weights.append({
             "id": option.pk, "label": option.weight, "grams": grams,
-            "cost": option_cost, "price": selling_price(option_cost, product.profit_percent),
+            "cost": option_cost, "price": option_price,
+            "selling_price": option.discounted_price if 0 < option.discounted_price < option_price else option_price,
             "ingredients": [dict(line, grams=line["grams"] * factor, cost=line["cost"] * factor) for line in ingredients],
         })
+    base_price = selling_price(cost, product.profit_percent)
     return {
         "grams": product.recipe_yield_grams, "cost": cost,
-        "profit_percent": product.profit_percent, "price": selling_price(cost, product.profit_percent),
+        "profit_percent": product.profit_percent, "price": base_price,
+        "selling_price": product.discounted_price if 0 < product.discounted_price < base_price else base_price,
         "ingredients": ingredients, "weights": weights,
     }
 

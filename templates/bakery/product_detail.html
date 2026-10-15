@@ -42,15 +42,15 @@
                   type="radio"
                   name="weight_id"
                   value="{{ opt.id }}"
-                  data-price="{{ opt.price|stringformat:'d' }}"
-                  data-original-price="{% if opt.original_price %}{{ opt.original_price|stringformat:'d' }}{% endif %}"
+                  data-price="{{ opt.selling_price|stringformat:'d' }}"
+                  data-original-price="{% if opt.price_before_discount %}{{ opt.price_before_discount|stringformat:'d' }}{% endif %}"
                   data-weight-label="{{ opt.weight|fa_digits }}"
                   {% if forloop.first %}checked{% endif %}
                   required
                 >
                 <span class="weight-pill-check" aria-hidden="true">✓</span>
                 <span class="weight-pill-name">{{ opt.weight|fa_digits }}</span>
-                <span class="weight-pill-price"><bdi>{{ opt.price|toman }}</bdi> تومان</span>
+                <span class="weight-pill-price"><bdi>{{ opt.selling_price|toman }}</bdi> تومان</span>
               </label>
             {% endfor %}
           </div>
@@ -62,11 +62,11 @@
           {% if weight_options %}
             {% with first_opt=weight_options.0 %}
               <p class="detail-price-context" data-price-context>قیمت یک بسته · {{ first_opt.weight|fa_digits }}</p>
-              {% render_price amount=first_opt.price original=first_opt.original_price size="lg" dynamic=True %}
+              {% render_price amount=first_opt.selling_price original=first_opt.price_before_discount size="lg" dynamic=True %}
             {% endwith %}
           {% else %}
             <p class="detail-price-context">قیمت محصول</p>
-            {% render_price amount=product.price original=product.original_price size="lg" %}
+            {% render_price amount=product.selling_price original=product.price_before_discount size="lg" %}
           {% endif %}
         </div>
         <button class="button-primary detail-add-btn" type="submit">افزودن به سبد خرید</button>
@@ -74,14 +74,14 @@
       {% endwith %}
     </form>
 
-    {% if product.ingredients or product.description and product.short_description and product.description != product.short_description %}
+    {% if product.display_ingredients or product.description and product.short_description and product.description != product.short_description %}
       <details class="detail-more">
         <summary>ترکیبات و جزئیات</summary>
         <div class="detail-more-content">
           {% if product.description and product.short_description and product.description != product.short_description %}
             <p>{{ product.description|linebreaksbr }}</p>
           {% endif %}
-          {% if product.ingredients %}<p><strong>ترکیبات:</strong> {{ product.ingredients }}</p>{% endif %}
+          {% if product.display_ingredients %}<p><strong>ترکیبات:</strong> {{ product.display_ingredients }}</p>{% endif %}
         </div>
       </details>
     {% endif %}
