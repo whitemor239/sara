@@ -3,18 +3,52 @@
 {% block title %}نارون | پختِ آرام، هر روز{% endblock %}
 {% block content %}
 <div class="home-page">
-<section class="bakery-cover" aria-labelledby="home-hero-title">
-  {% if products.0.image %}
-  <img class="bakery-cover-image" src="{{ products.0.image.url }}" srcset="{% catalog_srcset products.0.image %}" sizes="100vw" width="1200" height="800" fetchpriority="high" alt="{{ products.0.image_alt|default:products.0.name }}">
-  {% else %}
-  <img class="bakery-cover-image" src="{% static 'bakery/tart-sample.webp' %}" width="1600" height="1000" fetchpriority="high" alt="تصویر نمونهٔ تارت شکلاتی">
-  {% endif %}
-  <div class="bakery-cover-copy">
-    <p class="eyebrow">شیرینی‌پزی خانگی، با حوصله</p>
-    <h1 id="home-hero-title">عطرِ شیرینی،<br>حالِ خانه.</h1>
-    <p>نان و شیرینی‌های دست‌ساز، برای لحظه‌های آرام شما.</p>
-    <a class="button-primary" href="{% url 'menu' %}">دیدن منو و سفارش <span aria-hidden="true">←</span></a>
+<section class="bakery-cover" aria-labelledby="home-hero-title" data-hero-carousel>
+  <div class="hero-slides-wrapper">
+    {% if hero_slides %}
+      {% for slide in hero_slides %}
+        <article class="hero-slide{% if forloop.first %} is-active{% endif %}" data-hero-slide {% if not forloop.first %}hidden{% endif %}>
+          <img class="bakery-cover-image" src="{{ slide.image.url }}" srcset="{% catalog_srcset slide.image %}" sizes="100vw" width="1600" height="900" {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} alt="{{ slide.image_alt|default:slide.title }}">
+          <div class="bakery-cover-copy">
+            <p class="eyebrow">{{ slide.subtitle|default:"شیرینی‌پزی خانگی، با حوصله" }}</p>
+            {% if forloop.first %}
+              <h1 id="home-hero-title">{{ slide.title|default:"عطرِ شیرینی،<br>حالِ خانه."|safe }}</h1>
+            {% else %}
+              <h2>{{ slide.title|default:"عطرِ شیرینی،<br>حالِ خانه."|safe }}</h2>
+            {% endif %}
+            <p>نان و شیرینی‌های دست‌ساز، برای لحظه‌های آرام شما.</p>
+            <a class="button-primary" href="{{ slide.button_url|default:'/menu/' }}">{{ slide.button_text|default:"دیدن منو و سفارش" }} <span aria-hidden="true">←</span></a>
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <article class="hero-slide is-active" data-hero-slide>
+        {% if products.0.image %}
+        <img class="bakery-cover-image" src="{{ products.0.image.url }}" srcset="{% catalog_srcset products.0.image %}" sizes="100vw" width="1200" height="800" fetchpriority="high" alt="{{ products.0.image_alt|default:products.0.name }}">
+        {% else %}
+        <img class="bakery-cover-image" src="{% static 'bakery/tart-sample.webp' %}" width="1600" height="1000" fetchpriority="high" alt="تصویر نمونهٔ تارت شکلاتی">
+        {% endif %}
+        <div class="bakery-cover-copy">
+          <p class="eyebrow">شیرینی‌پزی خانگی، با حوصله</p>
+          <h1 id="home-hero-title">عطرِ شیرینی،<br>حالِ خانه.</h1>
+          <p>نان و شیرینی‌های دست‌ساز، برای لحظه‌های آرام شما.</p>
+          <a class="button-primary" href="{% url 'menu' %}">دیدن منو و سفارش <span aria-hidden="true">←</span></a>
+        </div>
+      </article>
+    {% endif %}
   </div>
+
+  {% if hero_slides|length > 1 %}
+  <div class="hero-carousel-controls" aria-label="کنترل‌های اسلایدر">
+    <button type="button" class="hero-nav-btn hero-nav-prev" data-hero-prev aria-label="اسلاید قبلی">›</button>
+    <div class="hero-dots" role="tablist" aria-label="انتخاب اسلاید">
+      {% for slide in hero_slides %}
+        <button type="button" role="tab" data-hero-dot="{{ forloop.counter0 }}" aria-label="اسلاید {{ forloop.counter }}" {% if forloop.first %}aria-current="true"{% endif %}></button>
+      {% endfor %}
+    </div>
+    <button type="button" class="hero-nav-btn hero-nav-next" data-hero-next aria-label="اسلاید بعدی">‹</button>
+  </div>
+  {% endif %}
 </section>
 
 <p class="cover-guidance section-shell">برای روش تحویل و زمان آماده‌سازی، <a href="{% url 'contact' %}">با ما هماهنگ کنید</a>.</p>

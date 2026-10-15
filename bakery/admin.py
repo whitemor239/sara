@@ -8,6 +8,7 @@ from .models import (
     ContactMessage,
     CustomerProfile,
     DietaryTag,
+    HeroSlide,
     Ingredient,
     Order,
     OrderItem,
@@ -246,3 +247,22 @@ class CustomerProfileAdmin(admin.ModelAdmin):
     list_display = ("phone", "display_name", "created_at")
     search_fields = ("phone", "display_name", "user__username")
     readonly_fields = ("phone", "created_at")
+
+
+@admin.register(HeroSlide)
+class HeroSlideAdmin(admin.ModelAdmin):
+    list_display = ("title_preview", "image_preview", "is_active", "sort_order", "created_at")
+    list_editable = ("is_active", "sort_order")
+    list_filter = ("is_active", "created_at")
+    search_fields = ("title", "subtitle")
+
+    @admin.display(description="عنوان")
+    def title_preview(self, obj):
+        return obj.title or f"اسلاید {obj.id}"
+
+    @admin.display(description="پیش‌نمایش تصویر")
+    def image_preview(self, obj):
+        if obj.image:
+            from django.utils.html import format_html
+            return format_html('<img src="{}" style="height: 48px; border-radius: 4px; object-fit: cover;" alt="">', obj.image.url)
+        return "—"

@@ -38,6 +38,26 @@ class BakeryFlowTests(TestCase):
         self.assertContains(response, "data-product-gallery")
         self.assertContains(response, "نمای شیرینی")
 
+    def test_auto_generate_image_variants_on_save(self):
+        import io
+        from PIL import Image as PilImage
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from pathlib import Path
+
+        img_io = io.BytesIO()
+        PilImage.new("RGB", (1000, 800), color="red").save(img_io, format="JPEG")
+        uploaded = SimpleUploadedFile("sample_cookie.jpg", img_io.getvalue(), content_type="image/jpeg")
+
+        self.product.image = uploaded
+        self.product.save()
+
+        p = Path(self.product.image.path)
+        for w in (320, 640, 960):
+            variant = p.with_name(f"{p.stem}-catalog-{w}.webp")
+            self.assertTrue(variant.is_file(), f"Variant {w}w not generated")
+            variant.unlink(missing_ok=True)
+        p.unlink(missing_ok=True)
+
     def test_dashboard_chart_has_individual_hit_targets(self):
         from .templatetags.bakery_tags import render_dashboard_chart
         chart = render_dashboard_chart([{"label": str(i), "amount": i} for i in range(30)])

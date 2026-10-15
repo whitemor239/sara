@@ -22,7 +22,7 @@ from django.db.models import Q, TextField, Value
 from django.db.models.functions import Replace
 
 from .forms import CheckoutForm, ContactForm, CustomerProfileForm, LoginCodeForm, PhoneRequestForm, ProductReviewForm
-from .models import ContactMessage, CustomerProfile, DietaryTag, LoginCode, Order, OrderItem, Product, ProductCategory, ProductReview
+from .models import ContactMessage, CustomerProfile, DietaryTag, HeroSlide, LoginCode, Order, OrderItem, Product, ProductCategory, ProductReview
 from .sms import SMSDeliveryError, send_login_code
 from .zarinpal import Zarinpal, ZarinpalError
 
@@ -120,9 +120,11 @@ def home(request):
     if not products:
         products = Product.objects.filter(is_available=True).select_related("category").prefetch_related("dietary_tags")[:4]
     featured_reviews = ProductReview.objects.filter(is_approved=True).select_related("product")[:6]
+    hero_slides = HeroSlide.objects.filter(is_active=True).order_by("sort_order", "id")
     return render(request, "bakery/home.html", {
         "products": products,
         "featured_reviews": featured_reviews,
+        "hero_slides": hero_slides,
     })
 
 

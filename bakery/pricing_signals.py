@@ -1,7 +1,8 @@
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
-from .models import Ingredient, Product, ProductWeightOption, RecipeIngredient
+from .image_utils import generate_image_variants
+from .models import HeroSlide, Ingredient, Product, ProductImage, ProductWeightOption, RecipeIngredient
 from .pricing import recalculate_product_prices
 
 
@@ -11,6 +12,24 @@ def product_price_changed(sender, instance, raw=False, **kwargs):
         pricing = recalculate_product_prices(instance.pk)
         if pricing is not None:
             instance.price = pricing["price"]
+
+
+@receiver(post_save, sender=Product)
+def product_image_uploaded(sender, instance, raw=False, **kwargs):
+    if not raw and instance.image:
+        generate_image_variants(instance.image)
+
+
+@receiver(post_save, sender=ProductImage)
+def gallery_image_uploaded(sender, instance, raw=False, **kwargs):
+    if not raw and instance.image:
+        generate_image_variants(instance.image)
+
+
+@receiver(post_save, sender=HeroSlide)
+def hero_slide_image_uploaded(sender, instance, raw=False, **kwargs):
+    if not raw and instance.image:
+        generate_image_variants(instance.image)
 
 
 @receiver(post_save, sender=Ingredient)

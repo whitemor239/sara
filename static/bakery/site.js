@@ -354,6 +354,82 @@
     select(0);
   });
 
+  // Hero Carousel
+  const heroCarousel = document.querySelector("[data-hero-carousel]");
+  if (heroCarousel) {
+    const slides = [...heroCarousel.querySelectorAll("[data-hero-slide]")];
+    const dots = [...heroCarousel.querySelectorAll("[data-hero-dot]")];
+    const prevBtn = heroCarousel.querySelector("[data-hero-prev]");
+    const nextBtn = heroCarousel.querySelector("[data-hero-next]");
+
+    if (slides.length > 1) {
+      let currentIndex = 0;
+      let autoplayTimer = null;
+
+      const setSlide = (newIndex) => {
+        currentIndex = (newIndex + slides.length) % slides.length;
+        slides.forEach((slide, i) => {
+          if (i === currentIndex) {
+            slide.removeAttribute("hidden");
+            // brief timeout to trigger css opacity transition
+            requestAnimationFrame(() => slide.classList.add("is-active"));
+          } else {
+            slide.classList.remove("is-active");
+            slide.setAttribute("hidden", "until-found");
+          }
+        });
+        dots.forEach((dot, i) => {
+          if (i === currentIndex) {
+            dot.setAttribute("aria-current", "true");
+          } else {
+            dot.removeAttribute("aria-current");
+          }
+        });
+      };
+
+      const startAutoplay = () => {
+        stopAutoplay();
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          autoplayTimer = setInterval(() => setSlide(currentIndex + 1), 6000);
+        }
+      };
+
+      const stopAutoplay = () => {
+        if (autoplayTimer) {
+          clearInterval(autoplayTimer);
+          autoplayTimer = null;
+        }
+      };
+
+      prevBtn?.addEventListener("click", () => {
+        stopAutoplay();
+        setSlide(currentIndex - 1);
+        startAutoplay();
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        stopAutoplay();
+        setSlide(currentIndex + 1);
+        startAutoplay();
+      });
+
+      dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+          stopAutoplay();
+          setSlide(Number(dot.dataset.heroDot));
+          startAutoplay();
+        });
+      });
+
+      heroCarousel.addEventListener("mouseenter", stopAutoplay);
+      heroCarousel.addEventListener("mouseleave", startAutoplay);
+      heroCarousel.addEventListener("focusin", stopAutoplay);
+      heroCarousel.addEventListener("focusout", startAutoplay);
+
+      startAutoplay();
+    }
+  }
+
   // Reveal animation on scroll
   const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
   const targets = document.querySelectorAll("[data-reveal]");

@@ -414,3 +414,23 @@ class ProductReview(models.Model):
 
     def __str__(self):
         return f"نظر {self.author_name} برای {self.product.name}"
+
+
+class HeroSlide(models.Model):
+    title = models.CharField("عنوان اسلاید", max_length=140, blank=True, help_text="اختیاری؛ در صورت خالی بودن، متن پیش‌فرض نمایش داده می‌شود.")
+    subtitle = models.CharField("توضیح کوتاه / زیرعنوان", max_length=240, blank=True)
+    button_text = models.CharField("متن دکمه", max_length=60, default="دیدن منو و سفارش")
+    button_url = models.CharField("پیوند دکمه", max_length=200, default="/menu/")
+    image = models.ImageField("تصویر اسلاید", upload_to="hero/", help_text="سایز پیشنهادی: 1920x1080 یا 1600x900 پیکسل (افقی ۱۶:۹ یا ۳:۲)")
+    image_alt = models.CharField("متن جایگزین تصویر", max_length=180, blank=True)
+    is_active = models.BooleanField("فعال", default=True)
+    sort_order = models.PositiveSmallIntegerField("ترتیب نمایش", default=0)
+    created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
+
+    class Meta:
+        ordering = ("sort_order", "id")
+        verbose_name = "اسلاید هدر صفحه اصلی"
+        verbose_name_plural = "اسلایدهای هدر صفحه اصلی"
+
+    def __str__(self):
+        return self.title or f"اسلاید {self.id}"
