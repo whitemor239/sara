@@ -3,6 +3,10 @@
     {
       "name": "database",
       "mountTo": "database"
+    },
+    {
+      "name": "media",
+      "mountTo": "media"
     }
   ]
 }
