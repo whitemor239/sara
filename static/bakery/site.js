@@ -364,33 +364,66 @@
 
     if (slides.length > 1) {
       let currentIndex = 0;
+      let isTransitioning = false;
       let autoplayTimer = null;
 
-      const setSlide = (newIndex) => {
-        currentIndex = (newIndex + slides.length) % slides.length;
-        slides.forEach((slide, i) => {
-          if (i === currentIndex) {
-            slide.removeAttribute("hidden");
-            // brief timeout to trigger css opacity transition
-            requestAnimationFrame(() => slide.classList.add("is-active"));
-          } else {
-            slide.classList.remove("is-active");
-            slide.setAttribute("hidden", "until-found");
-          }
-        });
+      const setSlide = (newIndex, direction = "next") => {
+        if (isTransitioning) return;
+        newIndex = (newIndex + slides.length) % slides.length;
+        if (newIndex === currentIndex) return;
+
+        isTransitioning = true;
+        const currentSlide = slides[currentIndex];
+        const nextSlide = slides[newIndex];
+
+        // Prepare incoming slide position without transition
+        nextSlide.style.transition = "none";
+        // In RTL, "next" moves content right-to-left
+        const incomingOffset = direction === "next" ? "-100%" : "100%";
+        const outgoingOffset = direction === "next" ? "100%" : "-100%";
+
+        nextSlide.style.transform = `translateX(${incomingOffset})`;
+        nextSlide.removeAttribute("hidden");
+        nextSlide.classList.remove("is-active", "slide-out-left", "slide-out-right");
+
+        // Force browser reflow so transform is applied before transition starts
+        void nextSlide.offsetWidth;
+
+        // Restore transitions
+        currentSlide.style.transition = "";
+        nextSlide.style.transition = "";
+
+        // Animate
+        currentSlide.style.transform = `translateX(${outgoingOffset})`;
+        currentSlide.classList.remove("is-active");
+        nextSlide.style.transform = "translateX(0)";
+        nextSlide.classList.add("is-active");
+
         dots.forEach((dot, i) => {
-          if (i === currentIndex) {
+          if (i === newIndex) {
             dot.setAttribute("aria-current", "true");
           } else {
             dot.removeAttribute("aria-current");
           }
         });
+
+        setTimeout(() => {
+          slides.forEach((s, idx) => {
+            if (idx !== newIndex) {
+              s.setAttribute("hidden", "until-found");
+              s.style.transform = "";
+              s.classList.remove("is-active");
+            }
+          });
+          currentIndex = newIndex;
+          isTransitioning = false;
+        }, 650);
       };
 
       const startAutoplay = () => {
         stopAutoplay();
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          autoplayTimer = setInterval(() => setSlide(currentIndex + 1), 6000);
+          autoplayTimer = setInterval(() => setSlide(currentIndex + 1, "next"), 6500);
         }
       };
 
@@ -403,20 +436,22 @@
 
       prevBtn?.addEventListener("click", () => {
         stopAutoplay();
-        setSlide(currentIndex - 1);
+        setSlide(currentIndex - 1, "prev");
         startAutoplay();
       });
 
       nextBtn?.addEventListener("click", () => {
         stopAutoplay();
-        setSlide(currentIndex + 1);
+        setSlide(currentIndex + 1, "next");
         startAutoplay();
       });
 
       dots.forEach((dot) => {
         dot.addEventListener("click", () => {
+          const target = Number(dot.dataset.heroDot);
+          const dir = target >= currentIndex ? "next" : "prev";
           stopAutoplay();
-          setSlide(Number(dot.dataset.heroDot));
+          setSlide(target, dir);
           startAutoplay();
         });
       });

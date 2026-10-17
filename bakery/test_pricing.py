@@ -298,3 +298,35 @@ class RecipePricingAdminTests(TestCase):
         product.refresh_from_db()
         self.assertEqual(product.price, 105000)
         self.assertEqual(product.weight_options.get(weight="۲ کیلوگرم").price, 420000)
+
+    def test_ingredient_purchase_unit_conversions(self):
+        # 1. Gram unit: 250 grams purchased at 50,000 tomans -> 200,000 per kg
+        saffron = Ingredient.objects.create(
+            name="زعفران",
+            purchase_unit=Ingredient.Unit.GRAM,
+            purchase_quantity=Decimal("250"),
+            purchase_price=50000,
+            price_per_kg=1,
+        )
+        self.assertEqual(saffron.price_per_kg, 200000)
+
+        # 2. Package unit: 1 package of 100 grams purchased at 30,000 tomans -> 300,000 per kg
+        vanilla = Ingredient.objects.create(
+            name="وانیل",
+            purchase_unit=Ingredient.Unit.PACKAGE,
+            purchase_quantity=Decimal("1"),
+            purchase_price=30000,
+            package_weight_grams=Decimal("100"),
+            price_per_kg=1,
+        )
+        self.assertEqual(vanilla.price_per_kg, 300000)
+
+        # 3. Kilogram unit: 0.5 kg purchased at 80,000 tomans -> 160,000 per kg
+        walnut = Ingredient.objects.create(
+            name="گردو",
+            purchase_unit=Ingredient.Unit.KILOGRAM,
+            purchase_quantity=Decimal("0.5"),
+            purchase_price=80000,
+            price_per_kg=1,
+        )
+        self.assertEqual(walnut.price_per_kg, 160000)

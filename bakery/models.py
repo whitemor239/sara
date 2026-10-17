@@ -117,6 +117,23 @@ class Product(SalePricingMixin, models.Model):
         blank=True,
         help_text="فقط ویژگی‌هایی را ثبت کنید که با دستور پخت و ترکیبات محصول تأیید شده‌اند.",
     )
+    recipe_instructions = models.TextField(
+        "دستور و شیوهٔ پخت (رسپی)",
+        blank=True,
+        help_text="مراحل آماده‌سازی و نکات پخت شیرینی. در صورت وارد کردن، در صفحهٔ محصول برای مشتریان نیز نمایش داده می‌شود.",
+    )
+    baking_time_minutes = models.PositiveSmallIntegerField(
+        "زمان آماده‌سازی / پخت (دقیقه)",
+        null=True,
+        blank=True,
+        help_text="اختیاری؛ مثلاً ۴۵ دقیقه.",
+    )
+    baking_temperature = models.CharField(
+        "دمای فر / پخت",
+        max_length=60,
+        blank=True,
+        help_text="اختیاری؛ مثلاً: ۱۸۰ درجه سانتی‌گراد",
+    )
     is_available = models.BooleanField("موجود", default=True)
     is_featured = models.BooleanField("نمایش در صفحهٔ نخست", default=False)
     sort_order = models.PositiveSmallIntegerField("ترتیب نمایش", default=0)
@@ -245,8 +262,46 @@ class ProductWeightOption(SalePricingMixin, models.Model):
 
 
 class Ingredient(models.Model):
+    class Unit(models.TextChoices):
+        KILOGRAM = "kg", "کیلوگرم (kg)"
+        GRAM = "g", "گرم (g)"
+        PACKAGE = "pkg", "بسته / عدد"
+
     name = models.CharField("نام مادهٔ اولیه", max_length=120, unique=True)
+    purchase_unit = models.CharField(
+        "واحد خرید",
+        max_length=10,
+        choices=Unit.choices,
+        default=Unit.KILOGRAM,
+        blank=True,
+        help_text="واحدی که این ماده را تهیه می‌کنید (کیلوگرم، گرم یا بسته/قوطی).",
+    )
+    purchase_quantity = models.DecimalField(
+        "مقدار هر واحد خرید",
+        max_digits=10,
+        decimal_places=3,
+        default=Decimal("1"),
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.001"))],
+        help_text="مثلاً برای بسته ۲۵۰ گرمی، عدد ۲۵۰ یا برای ۱ کیلوگرم، عدد ۱ را وارد کنید.",
+    )
+    purchase_price = models.PositiveIntegerField(
+        "قیمت خرید این واحد (تومان)",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        help_text="مبلغی که برای این مقدار پرداخته‌اید. در صورت خالی بودن، از قیمت هر کیلو محاسبه می‌شود.",
+    )
     price_per_kg = models.PositiveIntegerField("قیمت هر کیلو (تومان)", validators=[MinValueValidator(1)])
+    package_weight_grams = models.DecimalField(
+        "وزن هر بسته (گرم)",
+        max_digits=12,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.001"))],
+        help_text="فقط در صورتی که واحد خرید «بسته / عدد» است، وزن هر بسته را به گرم وارد کنید تا نرخ کیلو به درستی محاسبه شود.",
+    )
     updated_at = models.DateTimeField("آخرین به‌روزرسانی قیمت", auto_now=True)
 
     class Meta:
@@ -258,8 +313,55 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+    def clean(self):
+        super().clean()
+        if self.purchase_unit == self.Unit.PACKAGE and not self.package_weight_grams:
+            raise ValidationError({"package_weight_grams": "برای واحد بسته/عدد، وزن هر بسته به گرم الزامی است."})
+
     @transaction.atomic
     def save(self, *args, **kwargs):
+        if not self.purchase_unit:
+            self.purchase_unit = self.Unit.KILOGRAM
+        if not self.purchase_quantity:
+            self.purchase_quantity = Decimal("1")
+
+        if self.pk:
+            old = Ingredient.objects.filter(pk=self.pk).values("price_per_kg", "purchase_price").first()
+            if old:
+                if self.purchase_price and self.purchase_price != old["purchase_price"]:
+                    if self.purchase_unit == self.Unit.KILOGRAM:
+                        self.price_per_kg = max(1, int(round(Decimal(self.purchase_price) / Decimal(self.purchase_quantity))))
+                    elif self.purchase_unit == self.Unit.GRAM:
+                        self.price_per_kg = max(1, int(round((Decimal(self.purchase_price) / Decimal(self.purchase_quantity)) * Decimal(1000))))
+                    elif self.purchase_unit == self.Unit.PACKAGE and self.package_weight_grams:
+                        total_grams = Decimal(self.purchase_quantity) * Decimal(self.package_weight_grams)
+                        self.price_per_kg = max(1, int(round((Decimal(self.purchase_price) / total_grams) * Decimal(1000))))
+                elif self.price_per_kg != old["price_per_kg"] or not self.purchase_price:
+                    if self.purchase_unit == self.Unit.KILOGRAM:
+                        self.purchase_price = max(1, int(round(Decimal(self.price_per_kg) * Decimal(self.purchase_quantity))))
+                    elif self.purchase_unit == self.Unit.GRAM:
+                        self.purchase_price = max(1, int(round((Decimal(self.price_per_kg) / Decimal(1000)) * Decimal(self.purchase_quantity))))
+                    elif self.purchase_unit == self.Unit.PACKAGE and self.package_weight_grams:
+                        total_grams = Decimal(self.purchase_quantity) * Decimal(self.package_weight_grams)
+                        self.purchase_price = max(1, int(round((Decimal(self.price_per_kg) / Decimal(1000)) * total_grams)))
+        else:
+            if self.purchase_price:
+                if self.purchase_unit == self.Unit.KILOGRAM:
+                    self.price_per_kg = max(1, int(round(Decimal(self.purchase_price) / Decimal(self.purchase_quantity))))
+                elif self.purchase_unit == self.Unit.GRAM:
+                    self.price_per_kg = max(1, int(round((Decimal(self.purchase_price) / Decimal(self.purchase_quantity)) * Decimal(1000))))
+                elif self.purchase_unit == self.Unit.PACKAGE and self.package_weight_grams:
+                    total_grams = Decimal(self.purchase_quantity) * Decimal(self.package_weight_grams)
+                    self.price_per_kg = max(1, int(round((Decimal(self.purchase_price) / total_grams) * Decimal(1000))))
+            elif self.price_per_kg:
+                if self.purchase_unit == self.Unit.KILOGRAM:
+                    self.purchase_price = max(1, int(round(Decimal(self.price_per_kg) * Decimal(self.purchase_quantity))))
+                elif self.purchase_unit == self.Unit.GRAM:
+                    self.purchase_price = max(1, int(round((Decimal(self.price_per_kg) / Decimal(1000)) * Decimal(self.purchase_quantity))))
+                elif self.purchase_unit == self.Unit.PACKAGE and self.package_weight_grams:
+                    total_grams = Decimal(self.purchase_quantity) * Decimal(self.package_weight_grams)
+                    self.purchase_price = max(1, int(round((Decimal(self.price_per_kg) / Decimal(1000)) * total_grams)))
+
         super().save(*args, **kwargs)
 
 

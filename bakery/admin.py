@@ -25,7 +25,7 @@ from .widgets import FlavorTagWidget, MoneyField, MoneyInput
 
 class MoneyFieldsAdminMixin:
     def formfield_for_dbfield(self, db_field, **kwargs):
-        if db_field.name in ("price", "discounted_price", "original_price", "price_per_kg"):
+        if db_field.name in ("price", "discounted_price", "original_price", "price_per_kg", "purchase_price"):
             kwargs.update(form_class=MoneyField, widget=MoneyInput)
         return super().formfield_for_dbfield(db_field, **kwargs)
 
@@ -75,13 +75,22 @@ class RecipeIngredientInline(admin.TabularInline):
 
 @admin.register(Ingredient)
 class IngredientAdmin(MoneyFieldsAdminMixin, admin.ModelAdmin):
-    list_display = ("name", "price_per_kg", "product_count", "last_updated")
+    list_display = ("name", "purchase_summary", "price_per_kg", "product_count", "last_updated")
     list_editable = ("price_per_kg",)
     search_fields = ("name",)
     ordering = ("name",)
     readonly_fields = ("last_updated",)
-    fields = ("name", "price_per_kg", "last_updated")
+    fields = ("name", "purchase_unit", "purchase_quantity", "purchase_price", "package_weight_grams", "price_per_kg", "last_updated")
     date_hierarchy = "updated_at"
+
+    @admin.display(description="واحد و قیمت خرید")
+    def purchase_summary(self, obj):
+        from .templatetags.bakery_tags import toman, fa_digits
+        if obj.purchase_price:
+            unit_display = obj.get_purchase_unit_display()
+            qty = fa_digits(f"{obj.purchase_quantity:g}")
+            return f"{qty} {unit_display} · {toman(obj.purchase_price)}"
+        return "—"
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_product_count=Count("recipe_items__product", distinct=True))
@@ -114,6 +123,10 @@ class ProductAdmin(MoneyFieldsAdminMixin, admin.ModelAdmin):
         ("قیمت‌گذاری و دستور مصرف", {
             "fields": ("auto_pricing", "recipe_yield_grams", "profit_percent", "price", "discounted_price", "pricing_summary", "last_price_calculation"),
             "description": "قیمت مواد را از بخش «مواد اولیه و قیمت روز» وارد کنید؛ مقدار مصرف هر ماده را در جدول پایین صفحه بنویسید. محاسبات پس از ذخیره به‌روز می‌شوند. سود روی هزینهٔ مواد افزوده و فقط قیمت نهایی به نزدیک‌ترین تومان گرد می‌شود.",
+        }),
+        ("دستور پخت و رسپی (نمایش برای مشتری)", {
+            "fields": ("recipe_instructions", "baking_time_minutes", "baking_temperature"),
+            "description": "مراحل پخت و نکات اختصاصی این شیرینی را اینجا ثبت کنید تا در صفحه محصول برای مشتریان نیز قابل مشاهده باشد.",
         }),
         ("تصویر و نمایش", {"fields": ("image", "image_alt", "is_available", "is_featured", "sort_order")}),
     )

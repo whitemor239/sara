@@ -38,6 +38,18 @@ class BakeryFlowTests(TestCase):
         self.assertContains(response, "data-product-gallery")
         self.assertContains(response, "نمای شیرینی")
 
+    def test_product_recipe_instructions_displayed_to_customer(self):
+        self.product.recipe_instructions = "۱. آرد و کره را مخلوط کنید.\n۲. به مدت ۳۰ دقیقه در فر بپزید."
+        self.product.baking_time_minutes = 30
+        self.product.baking_temperature = "۱۸۰ درجه سانتی‌گراد"
+        self.product.save()
+
+        response = self.client.get(self.product.get_absolute_url())
+        self.assertContains(response, "دستور و شیوهٔ پخت (رسپی)")
+        self.assertContains(response, "آرد و کره را مخلوط کنید")
+        self.assertContains(response, "زمان پخت: ۳۰ دقیقه")
+        self.assertContains(response, "دمای فر: ۱۸۰ درجه سانتی‌گراد")
+
     def test_auto_generate_image_variants_on_save(self):
         import io
         from PIL import Image as PilImage

@@ -85,6 +85,27 @@
         </div>
       </details>
     {% endif %}
+
+    {% if product.recipe_instructions %}
+      <details class="detail-more recipe-accordion">
+        <summary>دستور و شیوهٔ پخت (رسپی)</summary>
+        <div class="detail-more-content recipe-content">
+          {% if product.baking_time_minutes or product.baking_temperature %}
+            <div class="recipe-meta-badges">
+              {% if product.baking_time_minutes %}
+                <span class="recipe-badge">⏱ زمان پخت: {{ product.baking_time_minutes|fa_digits }} دقیقه</span>
+              {% endif %}
+              {% if product.baking_temperature %}
+                <span class="recipe-badge">🌡 دمای فر: {{ product.baking_temperature|fa_digits }}</span>
+              {% endif %}
+            </div>
+          {% endif %}
+          <div class="recipe-steps-text">
+            {{ product.recipe_instructions|linebreaksbr }}
+          </div>
+        </div>
+      </details>
+    {% endif %}
   </div>
 </section>
 
