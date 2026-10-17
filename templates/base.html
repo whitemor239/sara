@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f1e7">
-  <meta name="description" content="شیرینی‌ها و نان‌های نارون؛ هر روز تازه از تنور خانه تا سفرهٔ شما.">
+  <meta name="description" content="{% block meta_description %}شیرینی‌ها و نان‌های نارون؛ هر روز تازه از تنور خانه تا سفرهٔ شما.{% endblock %}">
   <title>{% block title %}نارون | شیرینی‌های خانگی{% endblock %}</title>
   <link rel="icon" href="{% static 'bakery/favicon.ico' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'bakery/site.css' %}">
@@ -28,17 +28,7 @@
         <a href="{% url 'menu' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'menu' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'menu' %}aria-current="page"{% endif %}>
           منوی امروز
         </a>
-        <a href="{% url 'about' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>
-          دربارهٔ ما
-        </a>
-        <a href="{% url 'contact' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>
-          تماس با ما
-        </a>
-        {% if request.user.is_staff %}
-          <a href="{% url 'shop_dashboard' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'shop_dashboard' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'shop_dashboard' %}aria-current="page"{% endif %}>
-            داشبورد فروش
-          </a>
-        {% endif %}
+        <a href="{% url 'blog' %}" class="primary-nav-item{% if request.resolver_match.url_name == 'blog' or request.resolver_match.url_name == 'blog_detail' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'blog' or request.resolver_match.url_name == 'blog_detail' %}aria-current="page"{% endif %}>بلاگ نارون</a>
       </nav>
 
       <div class="masthead-actions">
@@ -87,13 +77,9 @@
       <button class="nav-drawer-close masthead-icon-button" type="button" aria-label="بستن منو">✕</button>
     </div>
     <nav class="nav-drawer-links" aria-label="پیوندهای همراه">
+      <a href="{% url 'blog' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'blog' or request.resolver_match.url_name == 'blog_detail' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'blog' or request.resolver_match.url_name == 'blog_detail' %}aria-current="page"{% endif %}>بلاگ نارون</a>
       <a href="{% url 'home' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>خانه</a>
       <a href="{% url 'menu' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'menu' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'menu' %}aria-current="page"{% endif %}>منوی امروز</a>
-      <a href="{% url 'about' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'about' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>دربارهٔ ما</a>
-      <a href="{% url 'contact' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>تماس با ما</a>
-      {% if request.user.is_staff %}
-        <a href="{% url 'shop_dashboard' %}" class="nav-drawer-item{% if request.resolver_match.url_name == 'shop_dashboard' %} is-active{% endif %}" {% if request.resolver_match.url_name == 'shop_dashboard' %}aria-current="page"{% endif %}>داشبورد فروش</a>
-      {% endif %}
     </nav>
     <div class="masthead-drawer-actions">
       <a class="masthead-cart" href="{% url 'basket' %}">{% include "bakery/_cart_icon.html" %}<span>سبد خرید</span></a>
@@ -132,7 +118,7 @@
   <main id="main">{% block content %}{% endblock %}</main>
   <footer class="site-footer">
     <div><a class="footer-mark" href="{% url 'home' %}"><img class="naron-logo" src="{% static 'bakery/naron-logo.webp' %}" width="64" height="64" alt="نارون | Naron Bakery"></a><p>پختِ آرام، مواد ساده، و عطر نانی که تازه از فر بیرون آمده.</p></div>
-    <div class="footer-links"><a href="{% url 'menu' %}">دیدن منو</a><a href="{% url 'about' %}">دربارهٔ ما</a><a href="{% url 'basket' %}">سبد خرید</a><a href="{% url 'contact' %}">تماس با ما</a>{% if request.user.is_staff %}<a href="{% url 'shop_dashboard' %}">داشبورد فروش</a>{% endif %}<a href="{% if request.user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'phone_login' %}{% endif %}">{% if request.user.is_authenticated %}پروفایل{% else %}ورود با موبایل{% endif %}</a></div>
+    <div class="footer-links"><a href="{% url 'menu' %}">دیدن منو</a><a href="{% url 'about' %}">دربارهٔ ما</a><a href="{% url 'basket' %}">سبد خرید</a><a href="{% url 'contact' %}">تماس با ما</a><a href="{% if request.user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'phone_login' %}{% endif %}">{% if request.user.is_authenticated %}پروفایل{% else %}ورود با موبایل{% endif %}</a></div>
     <small>© نارون · برای خانه، از خانه</small>
   </footer>
 

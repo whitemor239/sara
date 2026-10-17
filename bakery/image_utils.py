@@ -30,11 +30,11 @@ def use_webp_image(instance):
         database = instance._state.db or "default"
 
         def delete_original():
-            from .models import HeroSlide, Product, ProductImage
+            from .models import BlogPost, HeroSlide, Product, ProductImage
 
             # Another record may still share the uploaded original.
             if not any(model.objects.using(database).filter(image=original_name).exists()
-                       for model in (Product, ProductImage, HeroSlide)):
+                       for model in (Product, ProductImage, HeroSlide, BlogPost)):
                 storage.delete(original_name)
 
         transaction.on_commit(delete_original, using=database)

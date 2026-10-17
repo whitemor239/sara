@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static bakery_tags %}
+{% block title %}{{ post.title }} | بلاگ نارون{% endblock %}
+{% block meta_description %}{{ post.excerpt }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'bakery/blog.css' %}">{% endblock %}
+{% block content %}
+<article class="journal-page journal-article">
+  <header class="journal-article-header">
+    <nav class="journal-breadcrumb" aria-label="مسیر صفحه"><a href="{% url 'home' %}">خانه</a><span aria-hidden="true">/</span><a href="{% url 'blog' %}">دفتر نارون</a>{% if post.category %}<span aria-hidden="true">/</span><a href="{% url 'blog' %}?category={{ post.category.slug }}">{{ post.category.name }}</a>{% endif %}</nav>
+    <span class="journal-kicker">{{ post.category.name|default:"یادداشت‌های نارون" }}</span>
+    <h1>{{ post.title }}</h1>
+    {% include "bakery/_blog_meta.html" %}
+  </header>
+  <div class="journal-reading">
+    <p class="journal-lead">{{ post.excerpt }}</p>
+    <figure class="journal-article-image">{% include "bakery/_blog_image.html" with eager=True sizes="(max-width: 800px) 92vw, 760px" %}{% if post.image_alt %}<figcaption>{{ post.image_alt }}</figcaption>{% endif %}</figure>
+    <div class="journal-prose">{{ post.body|linebreaks }}</div>
+    {% if recipe %}
+      <section class="journal-recipe" aria-labelledby="recipe-title">
+        <header><span class="journal-kicker">از رسپی‌های نارون</span><h2 id="recipe-title">{{ recipe.name }}</h2><p>دستور پخت برای آشپزخانهٔ شما</p></header>
+        {% if recipe.baking_time_minutes or recipe.baking_temperature or recipe.recipe_yield_grams %}
+          <dl class="journal-recipe-facts">
+            {% if recipe.baking_time_minutes %}<div><dt>زمان آماده‌سازی و پخت</dt><dd>{{ recipe.baking_time_minutes|fa_digits }} دقیقه</dd></div>{% endif %}
+            {% if recipe.baking_temperature %}<div><dt>دمای پخت</dt><dd>{{ recipe.baking_temperature|fa_digits }}</dd></div>{% endif %}
+            {% if recipe.recipe_yield_grams %}<div><dt>مقدار نهایی</dt><dd>{{ recipe.recipe_yield_grams|floatformat:"-3"|fa_digits }} گرم</dd></div>{% endif %}
+          </dl>
+        {% endif %}
+        {% if recipe_items %}<div class="journal-recipe-ingredients"><h3>مواد لازم</h3><p class="journal-recipe-hint">مواد آماده‌شده را علامت بزنید.</p><ul>{% for item in recipe_items %}<li><label><input type="checkbox"><span>{{ item.ingredient.name }}</span><bdi>{{ item.quantity_grams|floatformat:"-3"|fa_digits }} گرم</bdi></label></li>{% endfor %}</ul></div>{% elif recipe.display_ingredients %}<div class="journal-recipe-ingredients"><h3>مواد لازم</h3><p>{{ recipe.display_ingredients }}</p></div>{% endif %}
+        <div class="journal-recipe-method"><h3>مراحل آماده‌سازی</h3><div class="journal-prose">{{ recipe.recipe_instructions|linebreaks }}</div></div>
+        {% if recipe.is_available %}<a class="journal-text-link" href="{{ recipe.get_absolute_url }}">سفارش {{ recipe.name }} از نارون <span aria-hidden="true">←</span></a>{% endif %}
+      </section>
+    {% endif %}
+    <footer class="journal-article-footer"><div><span class="journal-kicker">نوشتهٔ</span><p>{{ post.author_name }}</p></div><a class="journal-text-link" href="{% url 'blog' %}">بازگشت به دفتر نارون <span aria-hidden="true">←</span></a></footer>
+  </div>
+</article>
+{% if related_posts %}<section class="journal-page journal-related"><div class="journal-shell"><div class="journal-section-heading"><div><p class="journal-kicker">ورق بعدی</p><h2>این‌ها را هم بخوانید</h2></div><a class="journal-text-link" href="{% url 'blog' %}">همهٔ نوشته‌ها ←</a></div><div class="journal-grid">{% for post in related_posts %}{% include "bakery/_blog_card.html" %}{% endfor %}</div></div></section>{% endif %}
+{% endblock %}

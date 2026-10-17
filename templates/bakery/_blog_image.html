@@ -1,0 +1,5 @@
+{% load static bakery_tags %}
+{% with image=post.cover_image %}
+{% if image %}<img src="{{ image.url }}" srcset="{% catalog_srcset image %}" sizes="{{ sizes|default:'(max-width: 700px) 92vw, (max-width: 1000px) 46vw, 360px' }}" alt="{{ post.image_alt|default:post.title }}" width="1600" height="1000" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+{% else %}<img src="{% static 'bakery/tart-sample.webp' %}" alt="تارت شکلاتی نارون" width="1600" height="1000" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">{% endif %}
+{% endwith %}

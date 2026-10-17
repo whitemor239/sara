@@ -3883,7 +3883,7 @@ form[data-cart-add][aria-busy="true"] button { opacity: .65; cursor: wait; }
 /* Loaf reference: quiet two-tier masthead and immersive bakery cover. */
 .header-search-link { display: none; }
 .bakery-cover { position: relative; isolation: isolate; min-height: 480px; height: clamp(480px, 68vh, 640px); background: var(--ink); overflow: hidden; }
-.hero-slides-wrapper { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.hero-slides-wrapper { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: pan-y pinch-zoom; }
 .hero-slide {
   position: absolute;
   inset: 0;

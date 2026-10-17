@@ -76,7 +76,7 @@
 .masthead-wordmark { display: block; min-width: 0; }
 .masthead-logo {
   display: block;
-  width: 10.5rem;
+  width: 9rem;
   max-width: 100%;
   height: auto;
   object-fit: contain;
@@ -205,7 +205,7 @@
   line-height: 1.5;
 }
 
-.masthead-menu { display: none; }
+.masthead-menu { display: none; flex-direction: column; gap: 0.4375rem; }
 .masthead-menu span {
   display: block;
   width: 1.25rem;
@@ -214,6 +214,35 @@
   background: currentColor;
 }
 .masthead-menu span:first-child { margin: 0; }
+
+/* Keep the utility area quiet; full labels remain in the navigation drawer. */
+.masthead-actions .masthead-account { padding-inline: .625rem; }
+.masthead-actions .masthead-account span,
+.masthead-actions .masthead-cart-label { display: none; }
+.masthead-actions .masthead-cart {
+  position: relative;
+  padding: .625rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--masthead-text);
+}
+.masthead-actions .masthead-cart:hover {
+  background: var(--masthead-hover);
+  border-color: var(--masthead-line);
+}
+.masthead-actions .masthead-cart .basket-count {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: -.125rem;
+  background: var(--masthead-accent);
+  color: var(--masthead-on-accent);
+  min-width: 1.125rem;
+  min-height: 1.125rem;
+  padding: 0 .25rem;
+  border-radius: 50%;
+  font-size: .65rem;
+}
+.masthead-actions .masthead-cart .basket-count:empty { display: none; }
 
 .masthead-search-panel {
   inset-inline: 1rem;

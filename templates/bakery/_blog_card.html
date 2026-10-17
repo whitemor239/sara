@@ -1,0 +1,9 @@
+<article class="journal-card">
+  <a class="journal-card-image" href="{{ post.get_absolute_url }}" tabindex="-1" aria-hidden="true">{% include "bakery/_blog_image.html" %}</a>
+  <div class="journal-card-body">
+    <span class="journal-kicker">{{ post.category.name|default:"یادداشت‌های نارون" }}</span>
+    <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+    <p>{{ post.excerpt }}</p>
+    {% include "bakery/_blog_meta.html" %}
+  </div>
+</article>

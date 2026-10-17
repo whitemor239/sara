@@ -5,6 +5,8 @@ from django.template.loader import render_to_string
 
 from .admin_forms import ProductPricingForm, RecipeIngredientFormSet, WeightOptionPricingForm, WeightOptionPricingFormSet
 from .models import (
+    BlogCategory,
+    BlogPost,
     ContactMessage,
     CustomerProfile,
     DietaryTag,
@@ -21,6 +23,27 @@ from .models import (
 )
 from .pricing import calculate_product_pricing, recalculate_product_prices
 from .widgets import FlavorTagWidget, MoneyField, MoneyInput
+
+
+@admin.register(BlogCategory)
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug")
+    search_fields = ("name",)
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "author_name", "is_published", "is_featured", "published_at")
+    list_filter = ("is_published", "is_featured", "category")
+    list_editable = ("is_published", "is_featured")
+    search_fields = ("title", "body", "author_name")
+    autocomplete_fields = ("category", "product")
+    date_hierarchy = "published_at"
+    fieldsets = (
+        ("محتوای مقاله", {"fields": ("title", "slug", "category", "excerpt", "body")}),
+        ("تصویر و رسپی", {"fields": ("image", "image_alt", "product")}),
+        ("انتشار", {"fields": ("author_name", "is_published", "is_featured", "published_at")}),
+    )
 
 
 class MoneyFieldsAdminMixin:

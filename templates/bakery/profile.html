@@ -147,11 +147,15 @@
           </form>
         </div>
 
-        <div class="profile-card profile-help-card">
-          <h3>نیاز به راهنمایی دارید؟</h3>
-          <p>اگر در روند سفارش یا پرداخت به مشکلی برخوردید، مستقیماً به آشپزخانه پیام دهید.</p>
-          <a class="text-link arrow-link" href="{% url 'contact' %}">ارسال پیام به پشتیبانی <span aria-hidden="true">←</span></a>
-        </div>
+        {% if request.user.is_staff %}
+          <div class="profile-card">
+            <h2>مدیریت فروشگاه</h2>
+            <div class="staff-actions">
+              <a class="button-primary" href="{% url 'shop_dashboard' %}">داشبورد فروش</a>
+              <a class="plain-button" href="{% url 'admin:index' %}">پنل مدیریت</a>
+            </div>
+          </div>
+        {% endif %}
       </aside>
     </div>
   {% else %}

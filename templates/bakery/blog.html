@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static bakery_tags %}
+{% block title %}بلاگ نارون | از دفتر آشپزخانه{% endblock %}
+{% block meta_description %}رسپی‌ها، نکته‌های پخت و قصه‌های آشپزخانهٔ نارون؛ برای لذت پختن در خانه.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'bakery/blog.css' %}">{% endblock %}
+{% block content %}
+<div class="journal-page">
+  <header class="journal-masthead">
+    <div class="journal-shell journal-masthead-inner">
+      <div><p class="journal-kicker">از آشپزخانه، برای شما</p><h1>دفترِ شیرینِ نارون<span class="journal-title-dot">.</span></h1></div>
+      <p>رسپی‌هایی برای امتحان‌کردن،<br>نکته‌هایی برای بهتر پختن، و قصه‌هایی کنار چای.</p>
+    </div>
+  </header>
+  {% if featured %}
+    <section class="journal-feature journal-shell" aria-labelledby="featured-title">
+      <div class="journal-feature-copy">
+        <span class="journal-kicker">پیشنهاد سردبیر · {{ featured.category.name|default:"یادداشت آشپزخانه" }}</span>
+        <h2 id="featured-title"><a href="{{ featured.get_absolute_url }}">{{ featured.title }}</a></h2>
+        <p>{{ featured.excerpt }}</p>
+        {% include "bakery/_blog_meta.html" with post=featured %}
+        <a class="journal-button" href="{{ featured.get_absolute_url }}">بخوانیم <span aria-hidden="true">←</span></a>
+      </div>
+      <a class="journal-feature-image" href="{{ featured.get_absolute_url }}" tabindex="-1" aria-hidden="true">{% include "bakery/_blog_image.html" with post=featured eager=True sizes="(max-width: 700px) 92vw, 55vw" %}</a>
+    </section>
+  {% endif %}
+  <section class="journal-index journal-shell" aria-labelledby="journal-index-title" id="articles">
+    <div class="journal-section-heading"><div><p class="journal-kicker">خواندنی‌های تازه</p><h2 id="journal-index-title">کمی بیشتر از شیرینی</h2></div><span class="journal-result-count">{{ page.paginator.count|fa_digits }} نوشته</span></div>
+    <div class="journal-tools">
+      <nav class="journal-categories" aria-label="دسته‌بندی مقاله‌ها">
+        <a href="{% url 'blog' %}{% if query %}?q={{ query|urlencode }}{% endif %}#articles" {% if not selected_category %}aria-current="page"{% endif %}>همهٔ نوشته‌ها</a>
+        {% for category in categories %}<a href="?category={{ category.slug }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}#articles" {% if selected_category == category.slug %}aria-current="page"{% endif %}>{{ category.name }}</a>{% endfor %}
+      </nav>
+      <form class="journal-search" method="get" action="{% url 'blog' %}#articles" role="search">
+        <label class="sr-only" for="journal-search">جست‌وجو در بلاگ</label>
+        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+        <input id="journal-search" type="search" name="q" value="{{ query }}" placeholder="دنبال چه می‌گردید؟" maxlength="200">
+        <button type="submit" aria-label="جست‌وجو در بلاگ"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+      </form>
+    </div>
+    {% if page.object_list %}
+      <div class="journal-grid">{% for post in page %}{% include "bakery/_blog_card.html" %}{% endfor %}</div>
+      {% render_pagination page "articles" %}
+    {% else %}
+      <div class="journal-empty"><span class="journal-kicker">دفتر آشپزخانه</span>
+        <h3>{% if query or selected_category %}نوشته‌ای پیدا نشد.{% else %}اولین یادداشت، به‌زودی.{% endif %}</h3>
+        <p>{% if query or selected_category %}یک عبارت دیگر را امتحان کنید یا همهٔ نوشته‌ها را ببینید.{% else %}اینجا جای دستورهای امتحان‌شده، تجربه‌های پخت و قصه‌های شیرین ماست.{% endif %}</p>
+        <a class="journal-text-link" href="{% if query or selected_category %}{% url 'blog' %}{% else %}{% url 'menu' %}{% endif %}">{% if query or selected_category %}همهٔ نوشته‌ها{% else %}تا آن روز، سری به منو بزنید{% endif %} <span aria-hidden="true">←</span></a>
+      </div>
+    {% endif %}
+  </section>
+  <aside class="journal-note journal-shell"><span class="journal-kicker">از دفتر تا تنور</span><h2>هوسِ یک شیرینیِ تازه؟</h2><p>این‌بار پختن با ما؛ شما چای را دم کنید.</p><a class="journal-text-link" href="{% url 'menu' %}">دیدن منوی نارون <span aria-hidden="true">←</span></a></aside>
+</div>
+{% endblock %}

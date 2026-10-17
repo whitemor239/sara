@@ -1,4 +1,5 @@
 import uuid
+from math import ceil
 from decimal import Decimal
 
 from django.conf import settings
@@ -6,6 +7,61 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils import timezone
+
+
+class BlogCategory(models.Model):
+    name = models.CharField("نام دسته‌بندی", max_length=80, unique=True)
+    slug = models.SlugField("نشانی انگلیسی", max_length=100, unique=True)
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "دسته‌بندی بلاگ"
+        verbose_name_plural = "دسته‌بندی‌های بلاگ"
+
+    def __str__(self):
+        return self.name
+
+
+class BlogPost(models.Model):
+    title = models.CharField("عنوان مقاله", max_length=200)
+    slug = models.SlugField("نشانی انگلیسی (اختیاری)", max_length=220, unique=True, blank=True)
+    category = models.ForeignKey(BlogCategory, verbose_name="دسته‌بندی", related_name="posts", on_delete=models.SET_NULL, null=True, blank=True)
+    excerpt = models.TextField("خلاصهٔ مقاله", max_length=450, help_text="چند جمله برای کارت مقاله و معرفی بالای صفحه.")
+    body = models.TextField("متن مقاله", help_text="بین پاراگراف‌ها یک خط خالی بگذارید. متن به‌صورت امن و با حفظ پاراگراف‌ها نمایش داده می‌شود.")
+    image = models.ImageField("تصویر شاخص", upload_to="blog/", blank=True, help_text="پیشنهاد: عکس افقی ۱۶۰۰ × ۱۰۰۰ پیکسل؛ خودکار به WebP تبدیل می‌شود.")
+    image_alt = models.CharField("توضیح تصویر", max_length=180, blank=True)
+    author_name = models.CharField("نام نویسنده", max_length=100, default="تحریریهٔ نارون")
+    product = models.ForeignKey("Product", verbose_name="محصول مرتبط / رسپی", on_delete=models.SET_NULL, null=True, blank=True, related_name="blog_posts", help_text="اختیاری؛ رسپی عمومی محصول و مقدار مواد آن در مقاله نمایش داده می‌شود.")
+    is_published = models.BooleanField("انتشار عمومی", default=False)
+    is_featured = models.BooleanField("مطلب شاخص بلاگ", default=False)
+    published_at = models.DateTimeField("زمان انتشار", default=timezone.now, help_text="با انتخاب زمان آینده، مطلب تا آن زمان نمایش داده نمی‌شود.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-published_at", "-pk")
+        verbose_name = "مقالهٔ بلاگ"
+        verbose_name_plural = "مقاله‌های بلاگ"
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = f"journal-{uuid.uuid4().hex[:12]}"
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("blog_detail", kwargs={"slug": self.slug})
+
+    @property
+    def reading_minutes(self):
+        return max(1, ceil(len(self.body.split()) / 180))
+
+    @property
+    def cover_image(self):
+        return self.image or (self.product.image if self.product_id else None)
 
 
 class ProductCategory(models.Model):

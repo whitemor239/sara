@@ -1,0 +1,2 @@
+{% load bakery_tags %}
+<div class="journal-meta"><span>{{ post.author_name }}</span><span aria-hidden="true">·</span><time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|jalali_date:"long" }}</time><span aria-hidden="true">·</span><span>{{ post.reading_minutes|fa_digits }} دقیقه مطالعه</span></div>

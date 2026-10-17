@@ -2,7 +2,7 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from .image_utils import use_webp_image
-from .models import HeroSlide, Ingredient, Product, ProductImage, ProductWeightOption, RecipeIngredient
+from .models import BlogPost, HeroSlide, Ingredient, Product, ProductImage, ProductWeightOption, RecipeIngredient
 from .pricing import recalculate_product_prices
 
 
@@ -27,6 +27,7 @@ def gallery_image_uploaded(sender, instance, raw=False, **kwargs):
 
 
 @receiver(post_save, sender=HeroSlide)
+@receiver(post_save, sender=BlogPost)
 def hero_slide_image_uploaded(sender, instance, raw=False, **kwargs):
     if not raw and instance.image:
         use_webp_image(instance)

@@ -456,6 +456,56 @@
         });
       });
 
+      // Lock only deliberate horizontal, single-finger gestures. Vertical scrolling
+      // and pinch zoom remain native browser gestures.
+      let swipe = null;
+      let suppressClickUntil = 0;
+      heroCarousel.addEventListener("touchstart", (event) => {
+        swipe = null;
+        if (event.touches.length !== 1) { startAutoplay(); return; }
+        if (isTransitioning ||
+            event.target.closest("button, input, select, textarea")) return;
+        const touch = event.touches[0];
+        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
+        stopAutoplay();
+      }, { passive: true });
+      heroCarousel.addEventListener("touchmove", (event) => {
+        if (!swipe) return;
+        if (event.touches.length !== 1) { swipe = null; startAutoplay(); return; }
+        const touch = event.touches[0];
+        const dx = Math.abs(touch.clientX - swipe.x);
+        const dy = Math.abs(touch.clientY - swipe.y);
+        if (!swipe.axis && Math.max(dx, dy) > 10) swipe.axis = dx > dy * 1.2 ? "x" : "y";
+        if (swipe.axis === "x" && event.cancelable) event.preventDefault();
+      }, { passive: false });
+      heroCarousel.addEventListener("touchend", (event) => {
+        if (!swipe) return;
+        const gesture = swipe;
+        swipe = null;
+        const touch = [...event.changedTouches].find(item => item.identifier === gesture.id);
+        if (touch) {
+          const dx = touch.clientX - gesture.x;
+          const dy = touch.clientY - gesture.y;
+          const threshold = Math.min(80, Math.max(40, heroCarousel.clientWidth * 0.1));
+          if (gesture.axis !== "y" && Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            // Match the RTL slide animation: swipe right reveals the next slide.
+            setSlide(currentIndex + (dx > 0 ? 1 : -1), dx > 0 ? "next" : "prev");
+            suppressClickUntil = Date.now() + 400;
+          }
+        }
+        startAutoplay();
+      }, { passive: true });
+      heroCarousel.addEventListener("touchcancel", () => {
+        swipe = null;
+        startAutoplay();
+      }, { passive: true });
+      heroCarousel.addEventListener("click", (event) => {
+        if (Date.now() < suppressClickUntil) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+
       heroCarousel.addEventListener("mouseenter", stopAutoplay);
       heroCarousel.addEventListener("mouseleave", startAutoplay);
       heroCarousel.addEventListener("focusin", stopAutoplay);
